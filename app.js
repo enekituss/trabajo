@@ -677,6 +677,7 @@ async function saveRecord(event) {
       if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime()) || endDate <= startDate) {
         throw new Error("La fecha o el horario de la cita no son válidos.");
       }
+      if (startDate < new Date()) throw new Error("La cita debe empezar en el futuro.");
       result = await authClient.rpc("create_care_service", {
         p_client_id: clientId,
         p_caregiver_id: caregiverId,
