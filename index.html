@@ -107,6 +107,10 @@
           </section>
         </section>
 
+        <section class="view" id="view-caregivers">
+          <div class="page-heading"><div><p class="eyebrow">EQUIPO Y SELECCIÓN</p><h1>Cuidadoras</h1><p class="page-subtitle">Perfiles, documentación, estados del proceso y etiquetas.</p></div><button class="button button-primary" data-open-modal="caregiver"><span>＋</span> Nueva cuidadora</button></div>
+          <div class="toolbar"><label class="search-box"><span>⌕</span><input id="caregiver-search" type="search" placeholder="Buscar por nombre, zona o etiqueta…"></label><select id="caregiver-filter" aria-label="Filtrar cuidadoras por estado"><option value="all">Todos los estados</option><option value="new_candidate">Nueva candidata</option><option value="under_review">En estudio</option><option value="interview_scheduled">Entrevista prevista</option><option value="approved">Apta</option><option value="not_suitable">No apta</option><option value="inactive">Inactiva</option></select></div>
+          <section class="panel"><div class="panel-heading"><div><h2>Perfiles guardados</h2><p>Los cambios se guardan en la base de datos</p></div><span class="soft-tag" id="caregiver-result-count">0 perfiles</span></div><div class="table-scroll"><table><thead><tr><th>CUIDADORA</th><th>ESTADO</th><th>ZONA</th><th>CADUCIDAD NIE</th><th>ETIQUETAS</th><th></th></tr></thead><tbody id="caregivers-table"><tr><td colspan="6" class="loading-row">Cargando…</td></tr></tbody></table></div></section>
         </section>
 
         <section class="view" id="view-clients">
