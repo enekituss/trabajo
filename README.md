@@ -8,7 +8,7 @@ Portal interno en desarrollo para gestionar cuidadoras, personas atendidas, turn
 - Formularios de cuidadoras/personas y turnos conectados al esquema de Supabase cuando está configurado.
 - Panel con avisos de caducidad calculados desde las fichas y turnos próximos.
 - Enlaces para abrir rutas en Google Maps.
-- Integración Google Calendar preparada en archivos, pendiente de configurar Google Cloud, las funciones de Supabase y sus secretos antes de activarla.
+- Integración Google Calendar con funciones OAuth/sincronización añadidas al repositorio; pendiente de configurar Google Cloud, migración 004, secretos y despliegue de funciones antes de activarla.
 
 ## Migraciones de datos
 
