@@ -72,6 +72,93 @@ revoke all on table public.google_calendar_connections, public.google_oauth_stat
 
 
 -- Crear una cita y su asignación en una sola transacción para no dejar citas a medias.
+-- Also guard the reverse direction: a new recurring shift must not collide with
+-- an already scheduled punctual service. The trigger from migration 003 calls this function.
+create or replace function public.prevent_care_shift_overlap()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.status <> 'active' then
+    return new;
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtext(new.caregiver_id::text),
+    new.weekday
+  );
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtext(new.client_id::text),
+    new.weekday
+  );
+
+  if exists (
+    select 1 from public.care_shifts s
+    where s.id <> new.id
+      and s.status = 'active'
+      and s.weekday = new.weekday
+      and s.caregiver_id = new.caregiver_id
+      and new.start_time < s.end_time
+      and new.end_time > s.start_time
+      and (s.valid_until is null or new.valid_from <= s.valid_until)
+      and (new.valid_until is null or s.valid_from <= new.valid_until)
+  ) then
+    raise exception 'La cuidadora ya tiene un turno recurrente que se solapa.'
+      using errcode = '23P01';
+  end if;
+
+  if exists (
+    select 1 from public.care_shifts s
+    where s.id <> new.id
+      and s.status = 'active'
+      and s.weekday = new.weekday
+      and s.client_id = new.client_id
+      and new.start_time < s.end_time
+      and new.end_time > s.start_time
+      and (s.valid_until is null or new.valid_from <= s.valid_until)
+      and (new.valid_until is null or s.valid_from <= new.valid_until)
+  ) then
+    raise exception 'La persona atendida ya tiene un turno recurrente que se solapa.'
+      using errcode = '23P01';
+  end if;
+
+  if exists (
+    select 1
+    from public.services s
+    join public.service_assignments a on a.service_id = s.id
+    where s.status <> 'cancelled'
+      and a.ended_at is null
+      and a.caregiver_id = new.caregiver_id
+      and extract(isodow from (s.starts_at at time zone 'Europe/Madrid'))::smallint = new.weekday
+      and (s.starts_at at time zone 'Europe/Madrid')::date >= new.valid_from
+      and (new.valid_until is null or (s.starts_at at time zone 'Europe/Madrid')::date <= new.valid_until)
+      and (s.starts_at at time zone 'Europe/Madrid')::time < new.end_time
+      and (s.ends_at at time zone 'Europe/Madrid')::time > new.start_time
+  ) then
+    raise exception 'La cuidadora ya tiene una cita puntual que se solapa con este turno.'
+      using errcode = '23P01';
+  end if;
+
+  if exists (
+    select 1
+    from public.services s
+    where s.status <> 'cancelled'
+      and s.client_id = new.client_id
+      and extract(isodow from (s.starts_at at time zone 'Europe/Madrid'))::smallint = new.weekday
+      and (s.starts_at at time zone 'Europe/Madrid')::date >= new.valid_from
+      and (new.valid_until is null or (s.starts_at at time zone 'Europe/Madrid')::date <= new.valid_until)
+      and (s.starts_at at time zone 'Europe/Madrid')::time < new.end_time
+      and (s.ends_at at time zone 'Europe/Madrid')::time > new.start_time
+  ) then
+    raise exception 'La persona atendida ya tiene una cita puntual que se solapa con este turno.'
+      using errcode = '23P01';
+  end if;
+
+  return new;
+end;
+$$;
+
 create or replace function public.create_care_service(
   p_client_id uuid,
   p_caregiver_id uuid,
