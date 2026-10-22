@@ -6,3 +6,24 @@
 @media(max-width:940px){.sidebar{width:220px}.main-area{margin-left:220px}.dashboard-grid{grid-template-columns:1fr}.status-panel{min-height:unset}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-grid{grid-template-columns:1fr}.quick-action{padding:12px}.content-wrap{padding:25px 20px 15px}.topbar{padding:0 20px}}
 @media(max-width:650px){.sidebar{transform:translateX(-105%);transition:transform .2s;width:250px;box-shadow:none}.sidebar.open{transform:translateX(0);box-shadow:15px 0 40px #173d301c}.main-area{margin-left:0}.mobile-menu{display:block}.topbar{height:60px;padding:0 16px;gap:12px}.breadcrumbs{margin-right:auto;font-size:11px;gap:6px}.topbar-right{gap:9px}.demo-pill{font-size:0;padding:7px}.demo-pill .status-dot{width:7px;height:7px}.avatar-user{width:29px;height:29px}.content-wrap{padding:24px 14px 12px}.page-heading{align-items:flex-start;flex-direction:column;margin-bottom:21px}.page-heading h1{font-size:25px}.page-heading>.button{align-self:stretch}.stat-grid{gap:10px}.stat-card{padding:13px}.stat-top{font-size:10px;align-items:flex-start}.stat-icon{width:29px;height:29px}.stat-number{font-size:27px;margin:11px 0 7px}.stat-foot{font-size:9px}.agenda-panel,.status-panel,.quick-panel{padding-top:16px}.panel-heading{padding:0 14px 14px}.panel-heading h2{font-size:14px}.table-scroll table{min-width:650px}.panel-bottom{padding:11px 14px}.selection-total,.progress-stack{padding-left:15px;padding-right:15px}.full-width{width:calc(100% - 30px);margin-left:15px;margin-right:15px}.quick-grid{padding:0 12px 3px}.app-footer{flex-direction:column;line-height:1.5;padding-top:20px}.toolbar{flex-direction:column}.toolbar select{height:40px}.integration-notice{align-items:flex-start;flex-wrap:wrap}.integration-notice .soft-tag{margin-left:50px}.calendar-list{padding:0 10px 15px}.calendar-event{grid-template-columns:50px 4px minmax(0,1fr);gap:8px;padding:10px}.calendar-event .event-label{grid-column:3;justify-self:start}.calendar-legend{gap:10px;padding-left:14px;font-size:9px}.week-label{display:none}.form-row{grid-template-columns:1fr}.modal{padding:20px}.toast{right:14px;left:14px;bottom:14px;text-align:center}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Inicio de sesión privado */
+[hidden]{display:none!important}
+.login-shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 18px 20px;background:radial-gradient(ellipse at 16% 12%,#e5f4ec 0,transparent 35%),radial-gradient(ellipse at 90% 80%,#eeeafb 0,transparent 33%),#f6f8f6}
+.login-card{width:min(100%,430px);background:#fff;border:1px solid #e5ece7;border-radius:20px;padding:36px 37px 29px;box-shadow:0 24px 75px rgba(25,70,55,.09)}
+.login-brand{padding:0 0 31px}
+.login-card>.eyebrow{margin:0 0 9px}
+.login-card h1{font:800 30px Manrope,sans-serif;letter-spacing:-1.1px;margin:0}
+.login-subtitle{color:#76847e;line-height:1.65;font-size:12px;margin:10px 0 24px}
+.login-input{min-height:44px;font-size:12px}
+.login-submit{width:100%;min-height:44px;margin-top:18px}
+.login-submit:disabled{opacity:.55;cursor:not-allowed}
+.login-message{display:none;color:#a6443c;background:#fff0ef;border:1px solid #f7d8d5;border-radius:8px;padding:10px 11px;font-size:11px;line-height:1.5;margin:13px 0 0}
+.login-message.visible{display:block}
+.login-divider{height:1px;background:#edf1ee;margin:23px 0 15px}
+.login-footnote{display:flex;align-items:center;gap:8px;color:#788781;font-size:10px;line-height:1.5;margin:0}
+.login-lock{color:#357b5f}
+.login-config-status{color:#a0aaa5;font-size:9px;line-height:1.5;margin:12px 0 0}
+.login-copyright{font-size:10px;color:#9aa69f;margin:20px 0 0}
+.logout-button{font-size:10px;padding:8px 11px;white-space:nowrap}
+@media(max-width:520px){.login-shell{padding:20px 13px}.login-card{padding:28px 22px 24px;border-radius:15px}.login-brand{padding-bottom:26px}.login-card h1{font-size:27px}.logout-button{font-size:9px;padding:7px 8px}.topbar-right{gap:7px}}
