@@ -70,6 +70,56 @@ alter table public.google_calendar_alerts enable row level security;
 revoke all on table public.google_calendar_connections, public.google_oauth_states,
   public.google_calendar_alerts from anon, authenticated;
 
+
+-- Crear una cita y su asignación en una sola transacción para no dejar citas a medias.
+create or replace function public.create_care_service(
+  p_client_id uuid,
+  p_caregiver_id uuid,
+  p_service_type text,
+  p_starts_at timestamptz,
+  p_ends_at timestamptz,
+  p_internal_notes text default null
+)
+returns uuid
+language plpgsql
+set search_path = ''
+as $
+declare
+  v_service_id uuid;
+  v_uid uuid;
+begin
+  v_uid := (select auth.uid());
+  if (select public.current_staff_role()) is distinct from 'admin' then
+    raise exception 'Acceso no autorizado.' using errcode = '42501';
+  end if;
+  if p_starts_at is null or p_ends_at is null or p_ends_at <= p_starts_at then
+    raise exception 'El fin debe ser posterior al inicio.' using errcode = '22007';
+  end if;
+  if length(trim(coalesce(p_service_type, ''))) = 0 or length(trim(p_service_type)) > 120 then
+    raise exception 'El tipo de servicio no es válido.' using errcode = '22023';
+  end if;
+  if not exists(select 1 from public.clients c where c.id = p_client_id and c.status = 'active') then
+    raise exception 'La persona atendida no está activa.' using errcode = '23503';
+  end if;
+  if not exists(select 1 from public.caregivers c where c.id = p_caregiver_id and c.status = 'approved') then
+    raise exception 'La cuidadora no está aprobada.' using errcode = '23503';
+  end if;
+
+  insert into public.services(client_id, service_type, starts_at, ends_at, status, internal_notes, created_by)
+  values (p_client_id, trim(p_service_type), p_starts_at, p_ends_at, 'scheduled', nullif(trim(p_internal_notes), ''), v_uid)
+  returning id into v_service_id;
+
+  insert into public.service_assignments(service_id, caregiver_id, assigned_by)
+  values (v_service_id, p_caregiver_id, v_uid);
+
+  return v_service_id;
+end;
+$;
+
+revoke all on function public.create_care_service(uuid, uuid, text, timestamptz, timestamptz, text) from public, anon;
+grant execute on function public.create_care_service(uuid, uuid, text, timestamptz, timestamptz, text) to authenticated;
+
+
 commit;
 
 -- After running this migration, deploy the three Google Calendar Edge Functions.
