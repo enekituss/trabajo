@@ -515,7 +515,7 @@ function renderAll() {
   fillShiftSelects();
 }
 function setModalFields(type) {
-  ["caregiver", "client", "shift"].forEach(name => {
+  ["caregiver", "client", "shift", "service"].forEach(name => {
     const box = $("#" + name + "-fields");
     box.hidden = name !== type;
     box.querySelectorAll("input,select,textarea").forEach(control => { control.disabled = name !== type; });
@@ -526,13 +526,15 @@ function resetModal(type, record = null) {
   editingId = record?.id || null;
   $("#record-form").reset();
   $("#record-id").value = editingId || "";
-  const title = { caregiver: "Cuidadora", client: "persona atendida", shift: "turno recurrente" }[type];
+  const title = { caregiver: "Cuidadora", client: "persona atendida", shift: "turno recurrente", service: "cita puntual" }[type];
   $("#modal-title").textContent = (editingId ? "Editar " : "Nueva ") + title;
   $("#modal-intro").textContent = type === "caregiver"
     ? "Completa los datos profesionales. Guarda solo la información necesaria; no introduzcas el número completo del NIE."
     : type === "client"
       ? "Registra los datos operativos y la dirección exacta a la que deberá acudir la cuidadora."
-      : "Elige cuidadora, persona, días y franja horaria. Cada día seleccionado se guardará como un turno recurrente.";
+      : type === "shift"
+        ? "Elige cuidadora, persona, días y franja horaria para una asignación recurrente."
+        : "Crea una cita con fecha y hora concretas. Si Google Calendar está conectado, también aparecerá en ese calendario.";
   setModalFields(type);
   fillShiftSelects();
 
@@ -562,22 +564,34 @@ function resetModal(type, record = null) {
     Object.entries(fields).forEach(([id, value]) => { const el = $("#" + id); if (el) el.value = value ?? ""; });
   } else if (type === "shift") {
     $("#sh-from").value = todayIso();
-    $$("#shift-fields input[name='weekday']").forEach(box => { box.checked = false; });
+    $("#shift-fields input[name='weekday']").forEach(box => { box.checked = false; });
+  } else if (type === "service") {
+    $("#sv-date").value = todayIso();
+    $("#sv-start").value = "09:00";
+    $("#sv-end").value = "10:00";
   }
-  $("#record-submit").textContent = editingId ? "Guardar cambios" : (type === "caregiver" ? "Guardar cuidadora" : type === "client" ? "Guardar ficha" : "Guardar turnos");
+  $("#record-submit").textContent = editingId ? "Guardar cambios" : (type === "caregiver" ? "Guardar cuidadora" : type === "client" ? "Guardar ficha" : type === "shift" ? "Guardar turnos" : "Guardar cita");
   $("#modal-backdrop").hidden = false;
   $(".modal").scrollTop = 0;
 }
 function closeModal() { $("#modal-backdrop").hidden = true; }
 function fillShiftSelects() {
-  const caregiverSel = $("#sh-caregiver");
-  const clientSel = $("#sh-client");
-  if (!caregiverSel || !clientSel) return;
-  const previousCare = caregiverSel.value, previousClient = clientSel.value;
-  caregiverSel.innerHTML = '<option value="">Selecciona cuidadora apta</option>' + caregivers.filter(c => c.status === "approved").map(c => `<option value="${safe(c.id)}">${safe(fullName(c))}${c.work_area ? " · " + safe(c.work_area) : ""}</option>`).join("");
-  clientSel.innerHTML = '<option value="">Selecciona persona atendida</option>' + clients.filter(c => c.status === "active").map(c => `<option value="${safe(c.id)}">${safe(fullName(c))}${c.service_area ? " · " + safe(c.service_area) : ""}</option>`).join("");
-  if (previousCare && [...caregiverSel.options].some(o => o.value === previousCare)) caregiverSel.value = previousCare;
-  if (previousClient && [...clientSel.options].some(o => o.value === previousClient)) clientSel.value = previousClient;
+  const caregiverOptions = '<option value="">Selecciona cuidadora apta</option>' + caregivers.filter(c => c.status === "approved").map(c => `<option value="${safe(c.id)}">${safe(fullName(c))}${c.work_area ? " · " + safe(c.work_area) : ""}</option>`).join("");
+  const clientOptions = '<option value="">Selecciona persona atendida</option>' + clients.filter(c => c.status === "active").map(c => `<option value="${safe(c.id)}">${safe(fullName(c))}${c.service_area ? " · " + safe(c.service_area) : ""}</option>`).join("");
+  ["#sh-caregiver", "#sv-caregiver"].forEach(selector => {
+    const el = $(selector);
+    if (!el) return;
+    const previous = el.value;
+    el.innerHTML = caregiverOptions;
+    if (previous && [...el.options].some(o => o.value === previous)) el.value = previous;
+  });
+  ["#sh-client", "#sv-client"].forEach(selector => {
+    const el = $(selector);
+    if (!el) return;
+    const previous = el.value;
+    el.innerHTML = clientOptions;
+    if (previous && [...el.options].some(o => o.value === previous)) el.value = previous;
+  });
 }
 function formValue(id) { return $("#" + id).value.trim(); }
 function validateShiftForm() {
