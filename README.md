@@ -1,33 +1,27 @@
 # CuidaGest — Portal de gestión de cuidados
 
-Primera maqueta de interfaz para organizar la selección de cuidadores, los perfiles de las personas usuarias y la planificación de servicios.
+Portal interno en desarrollo para organizar la selección de cuidadores, las fichas de las personas usuarias y la planificación de servicios.
 
-## Qué incluye esta versión
+## Estado actual
 
-- Panel general con resumen de ejemplo.
-- Listado de cuidadores, búsqueda y filtro por estado.
-- Alta temporal de candidatos y cambio de estado (Apto, En valoración, No apto).
-- Listado de usuarios del servicio y alta temporal de fichas.
-- Agenda semanal ilustrativa.
-- Diseño adaptable a ordenador y móvil.
+- Interfaz de demostración en `index.html`, `styles.css` y `app.js`.
+- **Esquema inicial de base de datos preparado**, pendiente de crear y configurar un proyecto real de Supabase.
+- No existe todavía conexión con la base de datos, inicio de sesión ni sincronización con Google Calendar.
+- Los datos que muestra la interfaz siguen siendo ficticios y temporales. No introduzcas datos reales.
 
-## Cómo probarla
+## Base de datos propuesta
 
-Abre `index.html` en un navegador, o publica el repositorio con GitHub Pages para ver la maqueta en una URL.
+Usaremos Supabase/PostgreSQL para el almacenamiento persistente, Supabase Auth para las cuentas del personal y políticas Row Level Security (RLS) para restringir el acceso. La migración inicial está en:
 
-## Importante: todavía no es un sistema de producción
+- [Esquema SQL inicial](supabase/migrations/202610220001_initial_schema.sql)
+- [Guía de base de datos, copias de seguridad y privacidad](docs/BASE_DATOS_Y_SEGURIDAD.md)
 
-Los perfiles y horarios que aparecen son inventados. Los cambios realizados en la interfaz solo existen en la memoria de la pestaña y desaparecen al recargar. **No introduzcas información real de pacientes, usuarios o cuidadores.**
+El esquema incluye cuidadores, disponibilidad, usuarios del servicio, servicios, historial de asignaciones y registro de auditoría. **El archivo SQL no crea por sí solo una base en la nube**: debe revisarse y ejecutarse en un proyecto Supabase de desarrollo. Después hay que probar todos los permisos y la recuperación de copias antes de producción.
 
-Este repositorio no debe contener datos personales, datos de salud, direcciones, documentos identificativos, credenciales ni claves privadas.
+## Cómo probar la interfaz
 
-## Próximas fases propuestas
+Abre `index.html` en el navegador, o publica la demo con GitHub Pages. GitHub contiene solo código y documentación, no debe almacenar las fichas de las personas.
 
-1. Definir los campos definitivos de cuidadores, usuarios y servicios.
-2. Añadir inicio de sesión y permisos por rol.
-3. Conectar una base de datos privada y un backend con validaciones y registro de cambios.
-4. Crear servicios recurrentes y asignar cuidadores evitando solapamientos.
-5. Integrar Google Calendar con autorización segura.
-6. Probar copias de seguridad, controles de acceso y protección de datos antes de usarlo con información real.
+## Regla de seguridad
 
-La interfaz actual es únicamente un prototipo visual/funcional y no incorpora autenticación, persistencia segura ni sincronización con Google Calendar.
+No subir nunca a este repositorio datos de personas, historiales de salud, direcciones, documentos, contraseñas, tokens ni claves secretas. No usar datos reales hasta que la autenticación, permisos, copias de seguridad, pruebas de restauración y obligaciones de protección de datos estén revisados.
