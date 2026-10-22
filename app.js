@@ -663,6 +663,28 @@ async function saveRecord(event) {
         status: "active", notes: formValue("sh-notes") || null, created_by: currentUser.id
       }));
       result = await authClient.from("care_shifts").insert(values).select("id");
+    } else if (modalType === "service") {
+      if (editingId) throw new Error("La edición de citas existentes aún no está habilitada; crea una nueva cita.");
+      const clientId = $("#sv-client").value;
+      const caregiverId = $("#sv-caregiver").value;
+      const date = formValue("sv-date"), startTime = formValue("sv-start"), endTime = formValue("sv-end");
+      if (!clientId || !caregiverId || !date || !startTime || !endTime || !formValue("sv-type")) {
+        throw new Error("Completa persona, cuidadora, tipo de servicio, fecha y horario.");
+      }
+      if (endTime <= startTime) throw new Error("La hora de fin debe ser posterior a la hora de inicio.");
+      const startDate = new Date(date + "T" + startTime + ":00");
+      const endDate = new Date(date + "T" + endTime + ":00");
+      if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime()) || endDate <= startDate) {
+        throw new Error("La fecha o el horario de la cita no son válidos.");
+      }
+      result = await authClient.rpc("create_care_service", {
+        p_client_id: clientId,
+        p_caregiver_id: caregiverId,
+        p_service_type: formValue("sv-type"),
+        p_starts_at: startDate.toISOString(),
+        p_ends_at: endDate.toISOString(),
+        p_internal_notes: formValue("sv-notes") || null
+      });
     }
     if (result?.error) {
       if (result.error.code === "23P01" || /solapa|overlap/i.test(result.error.message || "")) {
@@ -670,12 +692,28 @@ async function saveRecord(event) {
       }
       if (result.error.code === "23505") throw new Error("Ya existe una asignación duplicada. Comprueba los turnos.");
       console.error("Error guardando:", result.error);
-      throw new Error("No se pudo guardar. Comprueba que ejecutaste la migración 003 y que los permisos están configurados.");
+      throw new Error("No se pudo guardar. Comprueba las migraciones necesarias y los permisos.");
+    }
+
+    // La ficha/cita queda guardada aunque Google no esté conectado.
+    if (calendarConnected && modalType === "caregiver") {
+      const caregiverId = editingId || result.data?.id;
+      if (caregiverId) await invokeCalendar("sync_caregiver_expiry", { caregiver_id: caregiverId }, true);
+    } else if (calendarConnected && modalType === "shift") {
+      for (const row of (result.data || [])) {
+        await invokeCalendar("sync_shift", { shift_id: row.id }, true);
+      }
+    } else if (calendarConnected && modalType === "service" && result.data) {
+      await invokeCalendar("sync_service", { service_id: result.data }, true);
     }
     closeModal();
     await refreshData();
     showView(modalType === "caregiver" ? "caregivers" : modalType === "client" ? "clients" : "shifts");
-    toast(editingId ? "Cambios guardados en Supabase." : (modalType === "shift" ? "Turnos guardados en Supabase." : "Ficha guardada en Supabase."));
+    const saveMessage = modalType === "caregiver" ? "Cuidadora guardada en Supabase."
+      : modalType === "client" ? "Ficha guardada en Supabase."
+      : modalType === "shift" ? "Turnos guardados en Supabase."
+      : "Cita guardada en Supabase.";
+    toast(saveMessage);
   } catch (error) {
     console.error(error);
     toast(error.message || "No se pudo guardar el registro.", true);
