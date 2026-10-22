@@ -15,17 +15,19 @@ La primera versión tendrá una única cuenta interna: la de la administradora. 
 7. `care_shifts`: turnos recurrentes por día semanal con hora, persona y cuidadora asignadas, y fechas de validez.
 8. `audit_events`: registro de cambios por registro y campos modificados.
 
-La migración `supabase/migrations/202610220003_care_profiles_and_shifts.sql` añade los campos y la tabla de turnos. Incluye validación para evitar solapamientos recurrentes del mismo cuidador o de la misma persona en la misma franja horaria.
+La migración `supabase/migrations/202610220003_care_profiles_and_shifts.sql` añade los campos y la tabla de turnos. La migración `202610220004_citas_puntuales.sql` habilita la creación de citas sin depender de Google Calendar y comprueba los solapamientos entre citas puntuales y turnos recurrentes.
 
 ## Cómo aplicar las migraciones
 
-En el proyecto nuevo de Supabase de CuidaGest, ejecuta cada SQL en este orden:
+En el proyecto Supabase de CuidaGest, las migraciones van en este orden:
 
 - `202610220001_initial_schema.sql`
 - `202610220002_single_admin.sql`
 - `202610220003_care_profiles_and_shifts.sql`
+- `202610220004_citas_puntuales.sql`
+- `202610220005_google_calendar.sql` (solo cuando se vaya a conectar Calendar)
 
-Si ya ejecutaste la 001 y la 002, ejecuta solo la 003. No ejecutes estos archivos en ninguno de los proyectos anteriores de Supabase. Comprueba siempre el nombre del proyecto antes de pulsar Run.
+Si ya ejecutaste la 001–003, ejecuta la 004 para habilitar citas puntuales. Puedes dejar la 005 para más adelante: no es necesaria para crear cuidadoras, personas atendidas ni turnos. No ejecutes estos archivos en ninguno de los proyectos anteriores de Supabase. Comprueba siempre el nombre del proyecto antes de pulsar Run.
 
 La subida de SQL a GitHub no cambia la base de datos por sí misma.
 
