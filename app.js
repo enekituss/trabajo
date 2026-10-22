@@ -197,6 +197,98 @@ async function initializeAuth() {
   }
 }
 
+async function invokeCalendar(action, payload = {}, quiet = false) {
+  if (!authClient || !currentUser) return { ok: false, error: "Inicia sesión primero." };
+  try {
+    const response = await authClient.functions.invoke("google-calendar-sync", { body: Object.assign({ action }, payload) });
+    const data = response.data, error = response.error;
+    if (error || (data && data.error)) {
+      const message = (data && data.error) || "No se pudo completar la operación de Google Calendar.";
+      if (!quiet) toast(message, true);
+      return { ok: false, error: message };
+    }
+    return { ok: true, data };
+  } catch (_error) {
+    const message = "No se pudo conectar con la función de Google Calendar. Comprueba que la has desplegado.";
+    if (!quiet) toast(message, true);
+    return { ok: false, error: message };
+  }
+}
+async function refreshCalendarStatus() {
+  const label = $("#calendar-connection-status");
+  const connect = $("#connect-google-calendar");
+  const sync = $("#sync-google-calendar");
+  if (!label || !connect || !sync || !authClient || !currentUser) return;
+  const result = await invokeCalendar("status", {}, true);
+  calendarConnected = result.ok && Boolean(result.data && result.data.connected);
+  if (calendarConnected) {
+    label.textContent = "Conectado con " + (result.data.email || "Google Calendar");
+    connect.textContent = "Reconectar cuenta";
+    sync.disabled = false;
+  } else {
+    label.textContent = "Google Calendar aún no está conectado";
+    connect.textContent = "Conectar Google Calendar";
+    sync.disabled = true;
+  }
+}
+async function refreshDataAfterCalendarSync() {
+  const results = await Promise.all([
+    authClient.from("care_shifts").select("*").order("weekday").order("start_time"),
+    authClient.from("services").select("*").order("starts_at", { ascending: true }),
+    authClient.from("service_assignments").select("service_id,caregiver_id").is("ended_at", null)
+  ]);
+  if (results.some(r => r.error)) return;
+  shifts = results[0].data || [];
+  const assignments = results[2].data || [];
+  services = (results[1].data || []).map(service => Object.assign({}, service, {
+    caregiver_id: (assignments.find(a => a.service_id === service.id) || {}).caregiver_id || null
+  }));
+  renderAll();
+}
+async function connectGoogleCalendar() {
+  const button = $("#connect-google-calendar");
+  if (!authClient || !currentUser) {
+    toast("Inicia sesión para conectar Google Calendar.", true);
+    return;
+  }
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Abriendo autorización…";
+  try {
+    const response = await authClient.functions.invoke("google-calendar-connect", { body: {} });
+    if (response.error || !response.data || !response.data.url) {
+      toast((response.data && response.data.error) || "No se pudo iniciar la conexión. Comprueba que desplegaste las funciones y configuraste los secretos.", true);
+      return;
+    }
+    window.location.assign(response.data.url);
+  } catch (_error) {
+    toast("No se pudo iniciar la conexión con Google. Comprueba la configuración de Supabase.", true);
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+async function syncGoogleCalendar() {
+  const button = $("#sync-google-calendar");
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Sincronizando…";
+  const result = await invokeCalendar("sync_all", {});
+  if (result.ok) {
+    await refreshDataAfterCalendarSync();
+    if (result.data.result && result.data.result.partial) {
+      toast("Sincronización parcial: se alcanzó el límite de esta pasada. Pulsa sincronizar otra vez.");
+    } else if (result.data.result && result.data.result.failed) {
+      toast("Sincronización parcial: algunos eventos requieren revisión.", true);
+    } else {
+      toast("Eventos y avisos sincronizados con Google Calendar.");
+    }
+  }
+  await refreshCalendarStatus();
+  button.textContent = original;
+  button.disabled = !calendarConnected;
+}
+
 async function refreshData() {
   if (!authClient || !currentUser || loadingData) return;
   loadingData = true;
