@@ -97,11 +97,18 @@ function showLogin(message = "") {
   $("#login-shell").hidden = false;
   if (message) setAuthMessage(message);
 }
-function showView(name) {
+function showView(name, trackHistory = true) {
   const names = { dashboard: "Panel de control", caregivers: "Cuidadoras", clients: "Personas atendidas", shifts: "Turnos y asignaciones" };
   if (!names[name]) return;
-  $$(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
-  $$(".nav-item[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  if (trackHistory && currentUser) {
+    const state = window.history.state;
+    if (!(state?.cuidaGest === true && state.guard !== true && state.view === name)) {
+      const route = window.location.pathname + window.location.search + window.location.hash;
+      window.history.pushState({ cuidaGest: true, view: name }, "", route);
+    }
+  }
+  $(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
+  $(".nav-item[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === name));
   $("#breadcrumb-title").textContent = names[name];
   $("#sidebar").classList.remove("open");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -139,8 +146,21 @@ async function verifySession(session, navigateDashboard = false) {
   $("#login-shell").hidden = true;
   $("#app-shell").hidden = false;
   $("#login-config-status").textContent = "Sesión verificada";
-  // La entrada correcta siempre lleva al dashboard, incluso si antes estaba en otro menú.
-  if (navigateDashboard) showView("dashboard");
+  if (navigateDashboard) {
+    const state = window.history.state;
+    const validViews = ["dashboard", "caregivers", "clients", "shifts"];
+    const restoredView = state?.cuidaGest === true && state.guard !== true && validViews.includes(state.view)
+      ? state.view
+      : "dashboard";
+    const route = window.location.pathname + window.location.search + window.location.hash;
+    if (state?.cuidaGest !== true) {
+      window.history.replaceState({ cuidaGest: true, guard: true, view: "dashboard" }, "", route);
+      window.history.pushState({ cuidaGest: true, view: restoredView }, "", route);
+    } else if (state.guard === true || state.view !== restoredView) {
+      window.history.pushState({ cuidaGest: true, view: restoredView }, "", route);
+    }
+    showView(restoredView, false);
+  }
   await refreshData();
   return true;
 }
@@ -325,7 +345,7 @@ async function refreshData() {
     const calendarResult = url.searchParams.get("calendar");
     if (calendarResult) {
       url.searchParams.delete("calendar");
-      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      window.history.replaceState(window.history.state || {}, "", url.pathname + url.search + url.hash);
       if (calendarResult === "connected") {
         toast("Google Calendar conectado. Sincronizando turnos y avisos…");
         const synced = await invokeCalendar("sync_all", {}, true);
@@ -744,6 +764,8 @@ async function logout() {
   currentUser = null;
   caregivers = []; clients = []; shifts = []; services = [];
   calendarConnected = false;
+  const route = window.location.pathname + window.location.search + window.location.hash;
+  window.history.replaceState(null, "", route);
   showLogin("Has cerrado la sesión.");
   $("#login-password").value = "";
 }
@@ -805,8 +827,24 @@ $("#caregivers-table").addEventListener("change", (event) => {
   const select = event.target.closest("[data-caregiver-status]");
   if (select) void changeCaregiverStatus(select.dataset.caregiverStatus, select.value);
 });
+window.addEventListener("popstate", (event) => {
+  if (!currentUser || $("#app-shell").hidden) return;
+  const state = event.state;
+  const validViews = ["dashboard", "caregivers", "clients", "shifts"];
+  if (state?.cuidaGest === true && state.guard !== true && validViews.includes(state.view)) {
+    showView(state.view, false);
+    return;
+  }
+  // Entrada de seguridad del historial: impide abandonar la aplicación al llegar al inicio.
+  showView("dashboard", false);
+  const route = window.location.pathname + window.location.search + window.location.hash;
+  window.history.pushState({ cuidaGest: true, view: "dashboard" }, "", route);
+});
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
 
-// Evitar que los enlaces de la marca provoquen navegación arriba en localhost o GitHub Pages.
-$$(".brand").forEach(link => link.addEventListener("click", event => event.preventDefault()));
+// La marca de CuidaGest vuelve al panel principal sin saltar al inicio del documento.
+$(".brand").forEach(link => link.addEventListener("click", event => {
+  event.preventDefault();
+  if (currentUser) showView("dashboard");
+}));
 initializeAuth();
