@@ -78,46 +78,35 @@
       <div class="content-wrap">
         <section class="view active" id="view-dashboard">
           <div class="page-heading">
-            <div><p class="eyebrow">RESUMEN DE ACTIVIDAD</p><h1>Buenos días <span class="wave">✳</span></h1><p class="page-subtitle">Aquí tienes el estado general de los cuidados y los servicios.</p></div>
-            <button class="button button-primary" data-open-modal="caregiver"><span>＋</span> Añadir cuidador</button>
+            <div><p class="eyebrow">RESUMEN DE ACTIVIDAD</p><h1>Panel de control <span class="wave">✳</span></h1><p class="page-subtitle">Resumen de cuidadoras, personas atendidas, documentación y turnos.</p></div>
+            <button class="button button-primary" data-open-modal="caregiver"><span>＋</span> Nueva cuidadora</button>
           </div>
-
           <div class="stat-grid">
-            <article class="stat-card"><div class="stat-top"><span>Cuidadores registrados</span><span class="stat-icon mint">♙</span></div><div class="stat-number" id="stat-caregivers">6</div><div class="stat-foot"><span class="tiny-dot green"></span> <span id="stat-approved">4 aptos</span><span class="stat-muted">en la base de datos</span></div></article>
-            <article class="stat-card"><div class="stat-top"><span>Usuarios activos</span><span class="stat-icon lilac">♡</span></div><div class="stat-number" id="stat-clients">4</div><div class="stat-foot"><span class="tiny-dot purple"></span> Servicios en seguimiento</div></article>
-            <article class="stat-card"><div class="stat-top"><span>Servicios de hoy</span><span class="stat-icon blue">◷</span></div><div class="stat-number">5</div><div class="stat-foot"><span class="tiny-dot blue-dot"></span> <span>Según agenda de ejemplo</span></div></article>
-            <article class="stat-card"><div class="stat-top"><span>Pendientes de valorar</span><span class="stat-icon amber">◎</span></div><div class="stat-number" id="stat-pending">2</div><div class="stat-foot"><span class="tiny-dot orange"></span> Requieren revisión</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Cuidadoras registradas</span><span class="stat-icon mint">♙</span></div><div class="stat-number" id="stat-caregivers">—</div><div class="stat-foot">Todos los perfiles guardados</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Personas atendidas</span><span class="stat-icon lilac">♡</span></div><div class="stat-number" id="stat-clients">—</div><div class="stat-foot">Fichas del servicio</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Turnos activos</span><span class="stat-icon blue">◷</span></div><div class="stat-number" id="stat-shifts">—</div><div class="stat-foot">Asignaciones semanales</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Documentos por revisar</span><span class="stat-icon amber">!</span></div><div class="stat-number" id="stat-expiring">—</div><div class="stat-foot">Caducados o próximos a caducar</div></article>
           </div>
-
           <div class="dashboard-grid">
-            <section class="panel agenda-panel">
-              <div class="panel-heading"><div><h2>Agenda de hoy</h2><p>Servicios programados de ejemplo</p></div><button class="text-button" data-view-link="shifts">Ver turnos <span>↗</span></button></div>
-              <div class="table-scroll"><table><thead><tr><th>HORA</th><th>USUARIO</th><th>CUIDADOR/A</th><th>SERVICIO</th><th>ESTADO</th></tr></thead><tbody id="today-table"></tbody></table></div>
-              <div class="panel-bottom"><span class="legend-dot"></span> <span>Horario ilustrativo · no son citas reales</span></div>
+            <section class="panel dashboard-section">
+              <div class="panel-heading"><div><h2>Avisos de documentación</h2><p>Caducidades vencidas o dentro de los próximos 90 días</p></div><span class="soft-tag" id="expiry-count-tag">0 avisos</span></div>
+              <div id="expiry-alerts" class="alerts-list"><div class="loading-row">Cargando avisos…</div></div>
             </section>
-
-            <section class="panel status-panel">
-              <div class="panel-heading"><div><h2>Proceso de selección</h2><p>Estado de los candidatos demo</p></div><span class="soft-tag">Actualizado ahora</span></div>
-              <div class="selection-total"><strong id="selection-total">6</strong><span>candidatos registrados</span></div>
-              <div class="progress-stack"><div class="progress-row"><div><span class="progress-label"><i class="progress-dot approved"></i>Aptos</span><strong id="progress-approved">4</strong></div><div class="progress-track"><span id="bar-approved" class="bar approved-bar" style="width:66.7%"></span></div></div><div class="progress-row"><div><span class="progress-label"><i class="progress-dot review"></i>En valoración</span><strong id="progress-review">2</strong></div><div class="progress-track"><span id="bar-review" class="bar review-bar" style="width:33.3%"></span></div></div><div class="progress-row"><div><span class="progress-label"><i class="progress-dot rejected"></i>No aptos</span><strong id="progress-rejected">0</strong></div><div class="progress-track"><span id="bar-rejected" class="bar rejected-bar" style="width:0%"></span></div></div></div>
-              <button class="button button-outline full-width" data-view-link="caregivers">Gestionar candidatos <span>→</span></button>
+            <section class="panel dashboard-section">
+              <div class="panel-heading"><div><h2>Próximos turnos</h2><p>Los próximos siete días</p></div><button class="text-button" data-view-link="shifts">Ver turnos →</button></div>
+              <div id="upcoming-shifts" class="upcoming-list"><div class="loading-row">Cargando agenda…</div></div>
             </section>
           </div>
-
           <section class="panel quick-panel">
-            <div class="panel-heading"><div><h2>Accesos rápidos</h2><p>Las tareas habituales, a mano</p></div></div>
+            <div class="panel-heading"><div><h2>Accesos rápidos</h2><p>Crear fichas o planificar un nuevo turno</p></div></div>
             <div class="quick-grid">
-              <button class="quick-action" data-open-modal="caregiver"><span class="quick-icon mint">＋</span><span><strong>Nuevo cuidador</strong><small>Registrar un candidato</small></span><b>→</b></button>
-              <button class="quick-action" data-open-modal="client"><span class="quick-icon lilac">♡</span><span><strong>Nuevo usuario</strong><small>Crear ficha del servicio</small></span><b>→</b></button>
-              <button class="quick-action" data-view-link="calendar"><span class="quick-icon blue">▦</span><span><strong>Consultar agenda</strong><small>Ver servicios planificados</small></span><b>→</b></button>
+              <button class="quick-action" data-open-modal="caregiver"><span class="quick-icon mint">＋</span><span><strong>Nueva cuidadora</strong><small>Perfil, documentación y etiquetas</small></span><b>→</b></button>
+              <button class="quick-action" data-open-modal="client"><span class="quick-icon lilac">♡</span><span><strong>Nueva persona atendida</strong><small>Ficha y ubicación del servicio</small></span><b>→</b></button>
+              <button class="quick-action" data-open-modal="shift"><span class="quick-icon blue">◷</span><span><strong>Asignar turnos</strong><small>Días, horario y cuidadora</small></span><b>→</b></button>
             </div>
           </section>
         </section>
 
-        <section class="view" id="view-caregivers">
-          <div class="page-heading"><div><p class="eyebrow">EQUIPO Y SELECCIÓN</p><h1>Cuidadores</h1><p class="page-subtitle">Consulta los perfiles y revisa el estado de cada candidatura.</p></div><button class="button button-primary" data-open-modal="caregiver"><span>＋</span> Añadir cuidador</button></div>
-          <div class="toolbar"><label class="search-box"><span>⌕</span><input id="caregiver-search" type="search" placeholder="Buscar por nombre o zona…"></label><select id="caregiver-filter" aria-label="Filtrar por estado"><option value="all">Todos los estados</option><option value="Apto">Apto</option><option value="En valoración">En valoración</option><option value="No apto">No apto</option></select></div>
-          <section class="panel"><div class="panel-heading"><div><h2>Perfiles registrados</h2><p>Información ficticia para probar el funcionamiento</p></div><span class="soft-tag" id="caregiver-result-count">6 perfiles</span></div><div class="table-scroll"><table><thead><tr><th>CUIDADOR/A</th><th>ZONA</th><th>EXPERIENCIA</th><th>DISPONIBILIDAD</th><th>VALORACIÓN</th><th>ESTADO</th></tr></thead><tbody id="caregivers-table"></tbody></table></div></section>
         </section>
 
         <section class="view" id="view-clients">
