@@ -19,9 +19,10 @@ Las migraciones están en `supabase/migrations/` y deben ejecutarse únicamente 
 1. [Esquema inicial](supabase/migrations/202610220001_initial_schema.sql)
 2. [Administrador único](supabase/migrations/202610220002_single_admin.sql)
 3. [Fichas y turnos](supabase/migrations/202610220003_care_profiles_and_shifts.sql)
-4. [Google Calendar](supabase/migrations/202610220004_google_calendar.sql)
+4. [Citas puntuales](supabase/migrations/202610220004_citas_puntuales.sql)
+5. [Google Calendar](supabase/migrations/202610220005_google_calendar.sql)
 
-Si las migraciones 001–003 ya están aplicadas, ejecuta solo la 004. No vuelvas a ejecutar las anteriores ni las apliques en otro proyecto.
+Si ya están aplicadas las migraciones 001–003, ejecuta la 004 para habilitar las citas puntuales. Deja la 005 para cuando vayamos a activar Google Calendar. Ejecuta el SQL únicamente en el proyecto de CuidaGest.
 
 ## Google Calendar
 
