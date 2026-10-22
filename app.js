@@ -374,7 +374,7 @@ function renderDashboard() {
   const events = getUpcomingEvents(7).slice(0, 7);
   $("#upcoming-shifts").innerHTML = events.length ? events.map(event => {
     const map = mapsUrl(event.client);
-    return `<article class="upcoming-row"><div class="upcoming-date"><strong>${safe(event.dateLabel)}</strong><small>${safe(DAY_NAMES[event.shift.weekday])}</small></div><div class="upcoming-detail"><strong>${safe(fullName(event.client))}</strong><small>${safe(formatTime(event.shift.start_time))}–${safe(formatTime(event.shift.end_time))} · ${safe(fullName(event.caregiver))}</small></div>${map ? `<a class="map-link" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Ruta ↗</a>` : '<span class="muted-small">Sin dirección</span>'}</article>`;
+    return `<article class="upcoming-row"><div class="upcoming-date"><strong>${safe(event.dateLabel)}</strong><small>${safe(event.kind === "service" ? "Cita" : DAY_NAMES[event.shift.weekday])}</small></div><div class="upcoming-detail"><strong>${safe(fullName(event.client))}</strong><small>${safe(formatTime(event.shift.start_time))}–${safe(formatTime(event.shift.end_time))} · ${safe(fullName(event.caregiver))}</small></div>${map ? `<a class="map-link" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Ruta ↗</a>` : '<span class="muted-small">Sin dirección</span>'}</article>`;
   }).join("") : '<div class="empty-message"><strong>No hay turnos próximos</strong><p>Crea una asignación semanal para que aparezca aquí.</p></div>';
 }
 function getUpcomingEvents(daysToLook = 7) {
@@ -398,6 +398,26 @@ function getUpcomingEvents(daysToLook = 7) {
         dateLabel: offset === 0 && iso === todayString ? "Hoy" : date.toLocaleDateString("es-ES", { day: "2-digit", month: "short" })
       });
     }
+  }
+  for (const service of services) {
+    if (service.status === "cancelled") continue;
+    const start = new Date(service.starts_at);
+    const end = new Date(service.ends_at);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) continue;
+    const todayAtNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12).getTime();
+    const eventAtNoon = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 12).getTime();
+    const offset = Math.floor((eventAtNoon - todayAtNoon) / 86400000);
+    if (offset < 0 || offset >= daysToLook || (offset === 0 && start < now)) continue;
+    const client = clients.find(c => c.id === service.client_id);
+    const caregiver = caregivers.find(c => c.id === service.caregiver_id);
+    if (!client) continue;
+    const dateIso = [start.getFullYear(), String(start.getMonth() + 1).padStart(2, "0"), String(start.getDate()).padStart(2, "0")].join("-");
+    events.push({
+      kind: "service",
+      shift: { weekday: 0, start_time: start.toTimeString().slice(0,5), end_time: end.toTimeString().slice(0,5) },
+      client, caregiver, date: dateIso,
+      dateLabel: offset === 0 ? "Hoy" : start.toLocaleDateString("es-ES", { day: "2-digit", month: "short" })
+    });
   }
   return events.sort((a, b) => (a.date + formatTime(a.shift.start_time)).localeCompare(b.date + formatTime(b.shift.start_time)));
 }
@@ -459,12 +479,39 @@ function renderShifts() {
     </tr>`;
   }).join("") : '<tr><td colspan="7" class="empty-row">No hay turnos para mostrar. Crea una asignación con el botón «Nuevo turno».</td></tr>';
 }
+function renderServices() {
+  const tbody = $("#services-table");
+  if (!tbody) return;
+  const rows = services.filter(service => service.status !== "cancelled").slice().sort((a, b) => String(a.starts_at).localeCompare(String(b.starts_at)));
+  $("#services-result-count").textContent = rows.length + (rows.length === 1 ? " cita" : " citas");
+  tbody.innerHTML = rows.length ? rows.map(service => {
+    const client = clients.find(c => c.id === service.client_id);
+    const caregiver = caregivers.find(c => c.id === service.caregiver_id);
+    const syncStatus = service.calendar_sync_status || "not_synced";
+    const syncLabel = syncStatus === "synced" ? "Sincronizado" : syncStatus === "error" ? "Error" : "Pendiente";
+    const syncClass = syncStatus === "synced" ? "chip-approved" : syncStatus === "error" ? "chip-rejected" : "chip-review";
+    const start = new Date(service.starts_at);
+    const end = new Date(service.ends_at);
+    const when = Number.isNaN(start.getTime()) ? "Fecha inválida" : start.toLocaleDateString("es-ES", { day:"2-digit", month:"short", year:"numeric" });
+    const hourStart = Number.isNaN(start.getTime()) ? "" : start.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" });
+    const hourEnd = Number.isNaN(end.getTime()) ? "" : end.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" });
+    const cells = [
+      '<tr><td><strong>', safe(when), '</strong><div class="person-sub">', safe(hourStart), '–', safe(hourEnd), '</div></td><td>',
+      client ? personMarkup(client) : "Persona no encontrada", '</td><td>',
+      caregiver ? personMarkup(caregiver) : "Sin asignar", '</td><td>',
+      safe(service.service_type || "Servicio"), '</td><td><span class="status-chip ', syncClass, '">', safe(syncLabel), '</span></td><td class="actions-cell"><button class="button button-outline button-small" data-sync-service="', safe(service.id), '">Sincronizar</button>'
+    ].join("");
+    const map = client ? mapsUrl(client) : "";
+    return cells + (map ? '<a class="button button-outline button-small" href="' + safe(map) + '" target="_blank" rel="noopener noreferrer">Ruta ↗</a>' : "") + '</td></tr>';
+  }).join("") : '<tr><td colspan="6" class="empty-row">Todavía no hay citas puntuales. Puedes crear una desde «Nueva cita».</td></tr>';
+}
 function renderDashboardOnly() { renderDashboard(); }
 function renderAll() {
   renderDashboard();
   renderCaregivers();
   renderClients();
   renderShifts();
+  renderServices();
   fillShiftSelects();
 }
 function setModalFields(type) {
