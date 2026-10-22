@@ -142,18 +142,78 @@
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-heading"><div><p class="eyebrow">MODO DEMOSTRACIÓN</p><h2 id="modal-title">Añadir cuidador</h2></div><button class="icon-button" id="close-modal" aria-label="Cerrar ventana">×</button></div>
       <p class="modal-intro" id="modal-intro">Añade un perfil ficticio para probar la interfaz. No uses datos personales reales.</p>
-      <form id="record-form">
+      <form id="record-form" class="record-form">
         <input type="hidden" id="record-type" value="caregiver">
-        <label class="field-label" for="record-name">Nombre de ejemplo <span>*</span></label><input class="form-input" id="record-name" name="name" required maxlength="70" placeholder="Ej. Alex Demo">
+        <input type="hidden" id="record-id" value="">
         <div id="caregiver-fields">
-          <label class="field-label" for="record-zone">Zona de trabajo</label><input class="form-input" id="record-zone" name="zone" maxlength="50" placeholder="Ej. Centro">
-          <div class="form-row"><div><label class="field-label" for="record-experience">Experiencia</label><select class="form-input" id="record-experience" name="experience"><option>Sin experiencia</option><option>Menos de 2 años</option><option>2–5 años</option><option>Más de 5 años</option></select></div><div><label class="field-label" for="record-status">Estado</label><select class="form-input" id="record-status" name="status"><option>En valoración</option><option>Apto</option><option>No apto</option></select></div></div>
+          <div class="form-section-title">Datos personales</div>
+          <div class="form-grid">
+            <div><label class="field-label" for="cg-first-name">Nombre *</label><input class="form-input" id="cg-first-name" maxlength="100" required></div>
+            <div><label class="field-label" for="cg-last-name">Primer apellido *</label><input class="form-input" id="cg-last-name" maxlength="100" required></div>
+            <div><label class="field-label" for="cg-second-last-name">Segundo apellido</label><input class="form-input" id="cg-second-last-name" maxlength="100"></div>
+            <div><label class="field-label" for="cg-birth-date">Fecha de nacimiento</label><input class="form-input" id="cg-birth-date" type="date"></div>
+            <div><label class="field-label" for="cg-phone">Teléfono</label><input class="form-input" id="cg-phone" type="tel" maxlength="40"></div>
+            <div><label class="field-label" for="cg-email">Correo electrónico</label><input class="form-input" id="cg-email" type="email" maxlength="254"></div>
+            <div><label class="field-label" for="cg-nationality">Nacionalidad</label><input class="form-input" id="cg-nationality" maxlength="80"></div>
+            <div><label class="field-label" for="cg-doc-type">Documento</label><select class="form-input" id="cg-doc-type"><option>NIE</option><option>DNI</option><option>Pasaporte</option><option>Otro</option></select></div>
+            <div><label class="field-label" for="cg-nie-expiry">Caducidad del NIE/permiso</label><input class="form-input" id="cg-nie-expiry" type="date"><small class="field-help">Se mostrará como aviso en el panel.</small></div>
+          </div>
+          <div class="form-section-title">Ubicación y disponibilidad</div>
+          <div class="form-grid">
+            <div class="field-span-2"><label class="field-label" for="cg-address">Dirección (opcional)</label><input class="form-input" id="cg-address" maxlength="200"></div>
+            <div><label class="field-label" for="cg-city">Localidad</label><input class="form-input" id="cg-city" maxlength="100"></div>
+            <div><label class="field-label" for="cg-province">Provincia</label><input class="form-input" id="cg-province" maxlength="100"></div>
+            <div><label class="field-label" for="cg-postal">Código postal</label><input class="form-input" id="cg-postal" maxlength="12"></div>
+            <div><label class="field-label" for="cg-zone">Zona de trabajo</label><input class="form-input" id="cg-zone" maxlength="120" placeholder="Ej. Burgos y alrededores"></div>
+            <div class="field-span-2"><label class="field-label" for="cg-availability">Disponibilidad</label><textarea class="form-input" id="cg-availability" rows="2" maxlength="1500"></textarea></div>
+          </div>
+          <div class="form-section-title">Experiencia y selección</div>
+          <div class="form-grid">
+            <div><label class="field-label" for="cg-experience">Experiencia</label><textarea class="form-input" id="cg-experience" rows="2" maxlength="2000"></textarea></div>
+            <div><label class="field-label" for="cg-training">Formación</label><textarea class="form-input" id="cg-training" rows="2" maxlength="2000"></textarea></div>
+            <div><label class="field-label" for="cg-languages">Idiomas</label><input class="form-input" id="cg-languages" placeholder="Español, inglés…"></div>
+            <div><label class="field-label" for="cg-support-types">Tipos de apoyo preferidos</label><input class="form-input" id="cg-support-types" placeholder="Acompañamiento, apoyo doméstico…"></div>
+            <div><label class="field-label" for="cg-status">Estado de candidatura</label><select class="form-input" id="cg-status"><option value="new_candidate">Nueva candidata</option><option value="under_review">En estudio</option><option value="interview_scheduled">Entrevista prevista</option><option value="approved">Apta</option><option value="not_suitable">No apta</option><option value="inactive">Inactiva</option></select></div>
+            <div><label class="field-label" for="cg-tags">Etiquetas</label><input class="form-input" id="cg-tags" maxlength="500" placeholder="Urgente, fines de semana, interna…"><small class="field-help">Separa con comas.</small></div>
+            <div class="field-span-2"><label class="field-label" for="cg-notes">Notas internas de selección</label><textarea class="form-input" id="cg-notes" rows="3" maxlength="3000"></textarea></div>
+          </div>
         </div>
         <div id="client-fields" hidden>
-          <label class="field-label" for="record-support">Tipo de apoyo</label><select class="form-input" id="record-support" name="support"><option>Apoyo personal</option><option>Acompañamiento</option><option>Apoyo doméstico</option><option>Apoyo nocturno</option><option>Atención por horas</option></select>
-          <label class="field-label" for="record-assigned">Cuidador/a asignado/a</label><select class="form-input" id="record-assigned" name="assigned"></select>
+          <div class="form-section-title">Datos de la persona atendida</div>
+          <div class="form-grid">
+            <div><label class="field-label" for="cl-first-name">Nombre *</label><input class="form-input" id="cl-first-name" maxlength="100" required></div>
+            <div><label class="field-label" for="cl-last-name">Primer apellido *</label><input class="form-input" id="cl-last-name" maxlength="100" required></div>
+            <div><label class="field-label" for="cl-second-last-name">Segundo apellido</label><input class="form-input" id="cl-second-last-name" maxlength="100"></div>
+            <div><label class="field-label" for="cl-phone">Teléfono de contacto</label><input class="form-input" id="cl-phone" type="tel" maxlength="40"></div>
+            <div class="field-span-2"><label class="field-label" for="cl-address">Dirección donde se presta el servicio *</label><input class="form-input" id="cl-address" maxlength="250" required placeholder="Calle, número, piso…"></div>
+            <div><label class="field-label" for="cl-postal">Código postal</label><input class="form-input" id="cl-postal" maxlength="12"></div>
+            <div><label class="field-label" for="cl-city">Localidad *</label><input class="form-input" id="cl-city" maxlength="100" required></div>
+            <div><label class="field-label" for="cl-province">Provincia</label><input class="form-input" id="cl-province" maxlength="100"></div>
+            <div><label class="field-label" for="cl-support">Tipo de apoyo</label><select class="form-input" id="cl-support"><option>Atención domiciliaria</option><option>Acompañamiento</option><option>Apoyo personal</option><option>Apoyo doméstico</option><option>Apoyo nocturno</option><option>Atención por horas</option><option>Otro</option></select></div>
+            <div><label class="field-label" for="cl-status">Estado</label><select class="form-input" id="cl-status"><option value="active">Activo</option><option value="paused">Pausado</option><option value="closed">Cerrado</option></select></div>
+            <div class="field-span-2"><label class="field-label" for="cl-access">Indicaciones prácticas para llegar</label><textarea class="form-input" id="cl-access" rows="2" maxlength="1500"></textarea></div>
+            <div class="field-span-2"><label class="field-label" for="cl-requirements">Necesidades de atención</label><textarea class="form-input" id="cl-requirements" rows="3" maxlength="3000" placeholder="Solo lo imprescindible para organizar el servicio."></textarea></div>
+            <div class="field-span-2"><label class="field-label" for="cl-notes">Notas de coordinación</label><textarea class="form-input" id="cl-notes" rows="2" maxlength="2000"></textarea></div>
+          </div>
         </div>
-        <div class="modal-actions"><button type="button" class="button button-outline" id="cancel-modal">Cancelar</button><button type="submit" class="button button-primary">Añadir a la demo</button></div>
+        <div id="shift-fields" hidden>
+          <div class="form-section-title">Asignación del turno recurrente</div>
+          <div class="form-grid">
+            <div><label class="field-label" for="sh-caregiver">Cuidadora apta *</label><select class="form-input" id="sh-caregiver" required></select></div>
+            <div><label class="field-label" for="sh-client">Persona atendida *</label><select class="form-input" id="sh-client" required></select></div>
+            <div class="field-span-2"><span class="field-label">Días de la semana *</span><div class="weekday-picker" id="weekday-picker">
+              <label><input type="checkbox" name="weekday" value="1"><span>Lun</span></label><label><input type="checkbox" name="weekday" value="2"><span>Mar</span></label><label><input type="checkbox" name="weekday" value="3"><span>Mié</span></label><label><input type="checkbox" name="weekday" value="4"><span>Jue</span></label><label><input type="checkbox" name="weekday" value="5"><span>Vie</span></label><label><input type="checkbox" name="weekday" value="6"><span>Sáb</span></label><label><input type="checkbox" name="weekday" value="7"><span>Dom</span></label>
+            </div><small class="field-help">Se creará un turno por cada día seleccionado.</small></div>
+            <div><label class="field-label" for="sh-start">Hora de inicio *</label><input class="form-input" id="sh-start" type="time" required></div>
+            <div><label class="field-label" for="sh-end">Hora de fin *</label><input class="form-input" id="sh-end" type="time" required></div>
+            <div class="field-span-2"><label class="field-label" for="sh-type">Tipo de servicio *</label><input class="form-input" id="sh-type" required maxlength="120" value="Atención domiciliaria"></div>
+            <div><label class="field-label" for="sh-from">Válido desde *</label><input class="form-input" id="sh-from" type="date" required></div>
+            <div><label class="field-label" for="sh-until">Válido hasta (opcional)</label><input class="form-input" id="sh-until" type="date"></div>
+            <div class="field-span-2"><label class="field-label" for="sh-notes">Notas del turno</label><textarea class="form-input" id="sh-notes" rows="2" maxlength="1200"></textarea></div>
+          </div>
+          <p class="form-note">El sistema impedirá asignaciones recurrentes superpuestas. Esto aún no crea eventos en Google Calendar.</p>
+        </div>
+        <div class="modal-actions"><button type="button" class="button button-outline" id="cancel-modal">Cancelar</button><button type="submit" class="button button-primary" id="record-submit">Guardar</button></div>
       </form>
       <p class="form-note">Los cambios solo se mantienen en esta pestaña y se borran al recargar.</p>
     </section>
