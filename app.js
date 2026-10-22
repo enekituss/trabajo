@@ -725,12 +725,14 @@ async function saveRecord(event) {
 async function changeCaregiverStatus(id, status) {
   const result = await authClient.from("caregivers").update({ status }).eq("id", id);
   if (result.error) { toast("No se pudo actualizar el estado.", true); await refreshData(); return; }
+  if (calendarConnected) await invokeCalendar("sync_caregiver_expiry", { caregiver_id: id }, true);
   toast("Estado de candidatura actualizado.");
   await refreshData();
 }
 async function toggleShift(id, status) {
   const result = await authClient.from("care_shifts").update({ status }).eq("id", id);
   if (result.error) { toast("No se pudo modificar el turno.", true); return; }
+  if (calendarConnected) await invokeCalendar("sync_shift", { shift_id: id }, true);
   toast(status === "paused" ? "Turno pausado. Su historial se conserva." : "Turno reactivado.");
   await refreshData();
 }
@@ -739,7 +741,8 @@ async function logout() {
   const { error } = await authClient.auth.signOut({ scope: "local" });
   if (error) { toast("No se ha podido cerrar sesión.", true); return; }
   currentUser = null;
-  caregivers = []; clients = []; shifts = [];
+  caregivers = []; clients = []; shifts = []; services = [];
+  calendarConnected = false;
   showLogin("Has cerrado la sesión.");
   $("#login-password").value = "";
 }
@@ -751,16 +754,28 @@ document.addEventListener("click", (event) => {
   const editCaregiver = event.target.closest("[data-edit-caregiver]");
   const editClient = event.target.closest("[data-edit-client]");
   const toggle = event.target.closest("[data-toggle-shift]");
+  const syncService = event.target.closest("[data-sync-service]");
   if (nav) showView(nav.dataset.view);
   if (viewLink) showView(viewLink.dataset.viewLink);
   if (open) resetModal(open.dataset.openModal);
   if (editCaregiver) resetModal("caregiver", caregivers.find(c => c.id === editCaregiver.dataset.editCaregiver));
   if (editClient) resetModal("client", clients.find(c => c.id === editClient.dataset.editClient));
   if (toggle) void toggleShift(toggle.dataset.toggleShift, toggle.dataset.nextStatus);
+  if (syncService) {
+    void (async () => {
+      const result = await invokeCalendar("sync_service", { service_id: syncService.dataset.syncService });
+      if (result.ok) {
+        await refreshDataAfterCalendarSync();
+        toast("Cita sincronizada con Google Calendar.");
+      }
+    })();
+  }
   if (event.target.closest("#close-modal, #cancel-modal, [data-cancel-modal]")) closeModal();
   if (event.target === $("#modal-backdrop")) closeModal();
   if (event.target.closest("#mobile-menu")) $("#sidebar").classList.toggle("open");
   if (event.target.closest("#logout-button")) void logout();
+  if (event.target.closest("#connect-google-calendar")) void connectGoogleCalendar();
+  if (event.target.closest("#sync-google-calendar")) void syncGoogleCalendar();
 });
 $("#login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
