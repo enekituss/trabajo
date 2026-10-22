@@ -196,8 +196,164 @@ $("#record-form").addEventListener("submit", (event) => {
 
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
 
-renderToday();
-renderCaregivers();
-renderClients();
-renderCalendar();
-renderStats();
+// --- Autenticación de CuidaGest ---
+// La sesión se conserva en sessionStorage: normalmente se vuelve a pedir inicio
+// de sesión al cerrar la pestaña. La seguridad real la aplican Supabase Auth y RLS.
+const authForm = $("#login-form");
+const authMessage = $("#login-message");
+const authStatus = $("#login-config-status");
+const authSubmit = $("#login-submit");
+const loginShell = $("#login-shell");
+const appShell = $("#app-shell");
+let authClient = null;
+let demoUiInitialized = false;
+let authEventSequence = 0;
+
+function setAuthMessage(message = "") {
+  authMessage.textContent = message;
+  authMessage.classList.toggle("visible", Boolean(message));
+}
+
+function showLogin(message = "") {
+  appShell.hidden = true;
+  loginShell.hidden = false;
+  if (message) setAuthMessage(message);
+}
+
+function setLoginBusy(isBusy) {
+  authSubmit.disabled = isBusy || !authClient;
+  authSubmit.textContent = isBusy ? "Comprobando acceso…" : "Iniciar sesión →";
+}
+
+function initializeDemoUi() {
+  if (demoUiInitialized) return;
+  demoUiInitialized = true;
+  renderToday();
+  renderCaregivers();
+  renderClients();
+  renderCalendar();
+  renderStats();
+}
+
+async function verifyAndShowApp(session) {
+  if (!session?.user?.id) {
+    showLogin();
+    return;
+  }
+
+  authStatus.textContent = "Verificando permisos de la cuenta…";
+  const { data: profile, error } = await authClient
+    .from("staff_profiles")
+    .select("display_name, role, is_active")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  if (error || !profile || profile.role !== "admin" || profile.is_active !== true) {
+    await authClient.auth.signOut({ scope: "local" });
+    authStatus.textContent = "La cuenta debe estar autorizada en Supabase.";
+    showLogin("Esta cuenta no tiene acceso autorizado a CuidaGest. Comprueba su perfil en Supabase.");
+    return;
+  }
+
+  setAuthMessage("");
+  authStatus.textContent = "Sesión verificada";
+  $("#signed-in-name").textContent = profile.display_name || "Administradora";
+  $("#signed-in-email").textContent = session.user.email || "Cuenta autorizada";
+  $("#topbar-avatar").textContent = initialsFor(profile.display_name || session.user.email || "AD");
+  $("#sidebar-avatar").textContent = initialsFor(profile.display_name || session.user.email || "AD");
+  loginShell.hidden = true;
+  appShell.hidden = false;
+  initializeDemoUi();
+}
+
+async function initializeAuthentication() {
+  const config = window.CUIDAGEST_CONFIG || {};
+  const url = String(config.supabaseUrl || "").trim();
+  const publicKey = String(config.supabasePublishableKey || "").trim();
+
+  if (!window.supabase?.createClient) {
+    authStatus.textContent = "No se ha podido cargar la biblioteca de autenticación. Comprueba la conexión a Internet.";
+    setLoginBusy(true);
+    return;
+  }
+  if (!url || !publicKey) {
+    authStatus.textContent = "Pendiente: añade la URL y la clave pública del proyecto en supabase-config.js.";
+    setAuthMessage("La pantalla de acceso está preparada, pero falta conectar el proyecto de Supabase.");
+    setLoginBusy(true);
+    return;
+  }
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url)) {
+    authStatus.textContent = "La URL configurada no parece una URL válida de proyecto Supabase.";
+    setAuthMessage("Revisa la URL del proyecto en supabase-config.js.");
+    setLoginBusy(true);
+    return;
+  }
+
+  try {
+    authClient = window.supabase.createClient(url.replace(/\/$/, ""), publicKey, {
+      auth: {
+        storage: window.sessionStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
+    });
+    setLoginBusy(false);
+    authStatus.textContent = "Conectando con la cuenta autorizada…";
+
+    authClient.auth.onAuthStateChange((_event, session) => {
+      const eventId = ++authEventSequence;
+      // No hacer llamadas Supabase dentro del callback síncrono de auth.
+      window.setTimeout(() => {
+        if (eventId === authEventSequence) void verifyAndShowApp(session);
+      }, 0);
+    });
+
+    const { data, error } = await authClient.auth.getSession();
+    if (error) {
+      showLogin("No se pudo comprobar la sesión. Inténtalo de nuevo.");
+      authStatus.textContent = "No se pudo comprobar la sesión.";
+      return;
+    }
+    await verifyAndShowApp(data.session);
+  } catch (_error) {
+    authStatus.textContent = "No se ha podido conectar con Supabase.";
+    setAuthMessage("No se ha podido conectar. Comprueba la URL y la clave pública configuradas.");
+    setLoginBusy(true);
+  }
+}
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!authClient) {
+    setAuthMessage("La conexión con Supabase todavía no está configurada.");
+    return;
+  }
+
+  const email = $("#login-email").value.trim();
+  const password = $("#login-password").value;
+  setAuthMessage("");
+  setLoginBusy(true);
+
+  try {
+    const { error } = await authClient.auth.signInWithPassword({ email, password });
+    setLoginBusy(false);
+    if (error) setAuthMessage("No se ha podido iniciar sesión. Comprueba el correo y la contraseña.");
+  } catch (_error) {
+    setLoginBusy(false);
+    setAuthMessage("No se ha podido conectar. Comprueba tu conexión a Internet e inténtalo de nuevo.");
+  }
+});
+
+$("#logout-button").addEventListener("click", async () => {
+  if (!authClient) return;
+  const { error } = await authClient.auth.signOut({ scope: "local" });
+  if (error) {
+    toast("No se ha podido cerrar la sesión. Inténtalo otra vez.");
+    return;
+  }
+  showLogin("Has cerrado la sesión correctamente.");
+  $("#login-password").value = "";
+});
+
+initializeAuthentication();
