@@ -37,7 +37,7 @@ La ubicación de usuarios puede revelar información personal sensible. No intro
 
 ## Mapas y avisos
 
-Para la primera versión se emplean URLs oficiales de Google Maps para buscar una dirección o abrir indicaciones. Las Maps URLs no requieren una API key: https://developers.google.com/maps/documentation/urls/get-started?hl=es
+Para la primera versión se emplean URLs oficiales de Google Maps para abrir indicaciones hacia el domicilio del servicio. Las Maps URLs no requieren API key: https://developers.google.com/maps/documentation/urls/get-started?hl=es. Los avisos de caducidad del NIE se muestran en el panel de control, no en Google Maps. Los recordatorios por correo o Google Calendar necesitan una integración segura adicional.
 
 La caducidad del NIE **no se notifica con Google Maps**. Se puede mostrar una alerta en el panel (vencido, vence pronto) y, en una fase posterior, enviar recordatorios mediante Google Calendar/correo a través de una integración segura. Para eso habrá que configurar la API de Google Calendar y probar la autorización, evitando guardar tokens secretos en GitHub.
 
