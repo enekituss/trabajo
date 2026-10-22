@@ -369,7 +369,7 @@ async function refreshData() {
 function setTableLoading() {
   $("#caregivers-table").innerHTML = '<tr><td colspan="6" class="loading-row">Cargando desde la base de datos…</td></tr>';
   $("#clients-table").innerHTML = '<tr><td colspan="5" class="loading-row">Cargando desde la base de datos…</td></tr>';
-  $("#shifts-table").innerHTML = '<tr><td colspan="7" class="loading-row">Cargando desde la base de datos…</td></tr>';
+  $("#shifts-table").innerHTML = '<tr><td colspan="8" class="loading-row">Cargando desde la base de datos…</td></tr>';
   $("#services-table").innerHTML = '<tr><td colspan="6" class="loading-row">Cargando desde la base de datos…</td></tr>';
 }
 
@@ -471,9 +471,16 @@ function renderClients() {
   $("#clients-table").innerHTML = rows.length ? rows.map(c => {
     const address = [c.service_address, c.postal_code, c.service_area, c.province].filter(Boolean).join(", ");
     const map = mapsUrl(c);
-    return `<tr><td>${personMarkup(c, c.contact_phone || "Sin teléfono")}</td><td>${safe(c.support_type || "Sin especificar")}</td><td><span class="address-cell">${safe(address || "Sin dirección")}</span></td><td>${statusChip(c.status, true)}</td><td class="actions-cell">${map ? `<a class="button button-outline button-small" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Abrir mapa ↗</a>` : ""}<button class="button button-outline button-small" data-edit-client="${safe(c.id)}">Editar</button></td></tr>`;
-  }).join("") : '<tr><td colspan="5" class="empty-row">No hay personas registradas que coincidan. Usa «Nueva ficha» para crear la primera.</td></tr>';
+    return `<tr>
+      <td>${personMarkup(c, c.contact_phone || "Sin teléfono")}</td>
+      <td>${safe(c.support_type || "Sin especificar")}</td>
+      <td><span class="address-cell">${safe(address || "Sin dirección")}</span></td>
+      <td>${statusChip(c.status, true)}</td>
+      <td class="actions-cell">${map ? `<a class="button button-outline button-small" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Abrir mapa ↗</a>` : ""}<button class="button button-outline button-small" type="button" data-edit-client="${safe(c.id)}">Editar</button></td>
+    </tr>`;
+  }).join("") : '<tr><td colspan="5" class="empty-row">No hay personas registradas que coincidan. Usa «Añadir usuario» para crear la primera ficha.</td></tr>';
 }
+
 function renderShifts() {
   const query = ($("#shift-search")?.value || "").trim().toLocaleLowerCase("es");
   const filter = $("#shift-filter")?.value || "active";
@@ -488,17 +495,20 @@ function renderShifts() {
     const caregiver = caregivers.find(c => c.id === s.caregiver_id);
     const client = clients.find(c => c.id === s.client_id);
     const map = mapsUrl(client);
+    const address = [client?.service_address, client?.postal_code, client?.service_area, client?.province].filter(Boolean).join(", ");
     return `<tr>
       <td><strong>${safe(DAY_NAMES[s.weekday])}</strong><div class="person-sub">${safe(s.service_type)}</div></td>
       <td class="time-cell">${safe(formatTime(s.start_time))}–${safe(formatTime(s.end_time))}</td>
       <td>${caregiver ? personMarkup(caregiver) : "Cuidadora no encontrada"}</td>
       <td>${client ? personMarkup(client) : "Persona no encontrada"}</td>
+      <td><span class="address-cell">${safe(address || "Sin dirección")}</span>${map ? `<div><a class="map-link" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Abrir ruta ↗</a></div>` : ""}</td>
       <td>${safe(formatDate(s.valid_from))}<div class="person-sub">${s.valid_until ? "Hasta " + safe(formatDate(s.valid_until)) : "Sin fecha final"}</div></td>
       <td>${statusChip(s.status === "active" ? "active" : "paused", true)}</td>
-      <td class="actions-cell">${map ? `<a class="button button-outline button-small" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Ruta ↗</a>` : ""}<button class="button button-outline button-small" data-toggle-shift="${safe(s.id)}" data-next-status="${s.status === "active" ? "paused" : "active"}">${s.status === "active" ? "Pausar" : "Reactivar"}</button></td>
+      <td class="actions-cell"><button class="button button-outline button-small" type="button" data-toggle-shift="${safe(s.id)}" data-next-status="${s.status === "active" ? "paused" : "active"}">${s.status === "active" ? "Pausar" : "Reactivar"}</button></td>
     </tr>`;
-  }).join("") : '<tr><td colspan="7" class="empty-row">No hay turnos para mostrar. Crea una asignación con el botón «Nuevo turno».</td></tr>';
+  }).join("") : '<tr><td colspan="8" class="empty-row">No hay turnos para mostrar. Crea una asignación con el botón «Nuevo turno».</td></tr>';
 }
+
 function renderServices() {
   const tbody = $("#services-table");
   if (!tbody) return;
@@ -508,23 +518,28 @@ function renderServices() {
     const client = clients.find(c => c.id === service.client_id);
     const caregiver = caregivers.find(c => c.id === service.caregiver_id);
     const syncStatus = service.calendar_sync_status || "not_synced";
-    const syncLabel = syncStatus === "synced" ? "Sincronizado" : syncStatus === "error" ? "Error" : "Pendiente";
-    const syncClass = syncStatus === "synced" ? "chip-approved" : syncStatus === "error" ? "chip-rejected" : "chip-review";
+    const syncLabel = !calendarConnected ? "No conectado" : syncStatus === "synced" ? "Sincronizado" : syncStatus === "error" ? "Error" : "Pendiente";
+    const syncClass = syncStatus === "synced" && calendarConnected ? "chip-approved" : syncStatus === "error" && calendarConnected ? "chip-rejected" : "chip-review";
     const start = new Date(service.starts_at);
     const end = new Date(service.ends_at);
     const when = Number.isNaN(start.getTime()) ? "Fecha inválida" : start.toLocaleDateString("es-ES", { day:"2-digit", month:"short", year:"numeric" });
     const hourStart = Number.isNaN(start.getTime()) ? "" : start.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" });
     const hourEnd = Number.isNaN(end.getTime()) ? "" : end.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" });
-    const cells = [
-      '<tr><td><strong>', safe(when), '</strong><div class="person-sub">', safe(hourStart), '–', safe(hourEnd), '</div></td><td>',
-      client ? personMarkup(client) : "Persona no encontrada", '</td><td>',
-      caregiver ? personMarkup(caregiver) : "Sin asignar", '</td><td>',
-      safe(service.service_type || "Servicio"), '</td><td><span class="status-chip ', syncClass, '">', safe(syncLabel), '</span></td><td class="actions-cell"><button class="button button-outline button-small" data-sync-service="', safe(service.id), '">Sincronizar</button>'
-    ].join("");
     const map = client ? mapsUrl(client) : "";
-    return cells + (map ? '<a class="button button-outline button-small" href="' + safe(map) + '" target="_blank" rel="noopener noreferrer">Ruta ↗</a>' : "") + '</td></tr>';
+    const syncAction = calendarConnected
+      ? `<button class="button button-outline button-small" type="button" data-sync-service="${safe(service.id)}">Sincronizar</button>`
+      : '<span class="muted-small">Conecta el calendario para sincronizar</span>';
+    return `<tr>
+      <td><strong>${safe(when)}</strong><div class="person-sub">${safe(hourStart)}–${safe(hourEnd)}</div></td>
+      <td>${client ? personMarkup(client) : "Persona no encontrada"}</td>
+      <td>${caregiver ? personMarkup(caregiver) : "Sin asignar"}</td>
+      <td>${safe(service.service_type || "Servicio")}</td>
+      <td><span class="status-chip ${syncClass}">${safe(syncLabel)}</span></td>
+      <td class="actions-cell">${syncAction}${map ? `<a class="button button-outline button-small" href="${safe(map)}" target="_blank" rel="noopener noreferrer">Ruta ↗</a>` : ""}</td>
+    </tr>`;
   }).join("") : '<tr><td colspan="6" class="empty-row">Todavía no hay citas puntuales. Puedes crear una desde «Nueva cita».</td></tr>';
 }
+
 function renderDashboardOnly() { renderDashboard(); }
 function renderAll() {
   renderDashboard();
