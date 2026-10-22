@@ -25,11 +25,13 @@ Ejecuta la migración `supabase/migrations/202610220004_google_calendar.sql` ún
 4. En Google Auth Platform configura la pantalla de consentimiento: nombre de la aplicación CuidaGest y correo de soporte. Si la aplicación se queda en modo Testing, añade la cuenta de Google que la va a autorizar como test user.
 5. En Clients, crea un **OAuth client ID** de tipo **Web application**.
 6. Añade como URI de redirección autorizada el valor exacto de `GOOGLE_REDIRECT_URI`. En el despliegue de Supabase debe ser:
-   `https://<PROJECT-REF>.supabase.co/functions/v1/google-calendar-callback`
-   Sustituye `<PROJECT-REF>` por el identificador real de tu proyecto CuidaGest. No inventes ni uses el ref de otro proyecto.
+   `https://kvbnczvxgxkaquenszbr.supabase.co/functions/v1/google-calendar-callback`
+   Esta URL corresponde al proyecto que está configurado actualmente en `supabase-config.js`. Antes de usarla, confirma que ese es el proyecto CuidaGest correcto; la URL de redirección debe coincidir exactamente.
 7. Guarda el Client ID y el Client secret fuera de GitHub.
 
-La integración pide scopes mínimos: `openid`, `email` y `https://www.googleapis.com/auth/calendar.events.owned` para trabajar con eventos de calendarios que la cuenta posee. Si Google exige verificación al pasar de usuarios de prueba, hay que seguir su proceso oficial.
+La integración pide scopes mínimos: `openid`, `email` y `https://www.googleapis.com/auth/calendar.events.owned` para trabajar con eventos de calendarios que la cuenta posee.
+
+**Importante para el uso diario:** según Google, si la aplicación está configurada como External y su estado de publicación es Testing, los refresh tokens que usan scopes de Calendar caducan a los 7 días (salvo que solo se usen scopes básicos de identidad). Para que una integración empresarial siga funcionando de forma continua, configura correctamente la audiencia y el estado de publicación; según el tipo de cuenta y de uso, Google puede exigir verificación de scopes sensibles. Consulta la documentación oficial antes de producción: https://developers.google.com/identity/protocols/oauth2/ y https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification.
 
 ## Secretos de Supabase Edge Functions
 
@@ -54,6 +56,17 @@ No compartas estos valores en chats, commits o capturas. No uses la clave `servi
 
 El callback debe ser la única función pública y comprueba un state de un solo uso con caducidad. En `supabase/config.toml` se configura `verify_jwt = false` exclusivamente para ese callback. Las otras funciones mantienen la validación JWT.
 
+## Desplegar las funciones con Supabase CLI
+
+La carpeta local debe contener el repositorio y sus carpetas `supabase/functions` y `supabase/config.toml`. Desde un terminal, dentro de esa carpeta, y habiendo instalado Supabase CLI, ejecuta:
+
+- `npx supabase login`
+- `npx supabase functions deploy google-calendar-connect --project-ref kvbnczvxgxkaquenszbr`
+- `npx supabase functions deploy google-calendar-callback --no-verify-jwt --project-ref kvbnczvxgxkaquenszbr`
+- `npx supabase functions deploy google-calendar-sync --project-ref kvbnczvxgxkaquenszbr`
+
+Antes de ejecutar, confirma que `kvbnczvxgxkaquenszbr` es el ref de CuidaGest. No uses los comandos en una carpeta o proyecto distinto. Las variables secretas deben añadirse en Edge Functions → Secrets antes de probar las funciones.
+
 ## Qué se sincroniza
 
 - Turnos: eventos semanales recurrentes en Europe/Madrid.
@@ -71,7 +84,7 @@ El calendario de Google procesa datos transferidos desde CuidaGest. Mantén las 
 - Ejecutar y probar todas las migraciones en el proyecto correcto.
 - Crear y probar el único perfil administrador.
 - Desplegar funciones y configurar secretos.
-- Probar alta, edición, pausa y cancelación de turnos, además de cambios de caducidad del documento.
+- Probar creación de citas puntuales, alta/edición de cuidadoras, pausa/reactivación de turnos y cambios de caducidad del documento.
 - Asegurar que no se dupliquen eventos tras reintentar una operación.
 - Confirmar el tratamiento de datos y los permisos de calendario.
 - Probar copia de seguridad y recuperación.
