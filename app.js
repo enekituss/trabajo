@@ -324,7 +324,7 @@ async function refreshData() {
     const failed = [careResult, clientResult, shiftResult, serviceResult, assignmentResult].find(r => r.error);
     if (failed) {
       console.error("Error al cargar datos de CuidaGest:", failed.error);
-      toast("No se han podido cargar los datos. Comprueba las cuatro migraciones en el proyecto de CuidaGest.", true);
+      toast("No se han podido cargar los datos. Comprueba las migraciones aplicadas y los permisos de la cuenta.", true);
       caregivers = [];
       clients = [];
       shifts = [];
