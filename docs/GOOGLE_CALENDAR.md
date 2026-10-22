@@ -11,11 +11,11 @@ El navegador nunca recibirá el token de actualización de Google ni el secreto 
 5. La Edge Function comprueba el estado, cambia el código por tokens y cifra el refresh token con una clave AES-GCM almacenada solo como secreto de Edge Functions.
 6. Al crear/editar una cuidadora, turno o servicio, CuidaGest puede sincronizar eventos y recordatorios con Google Calendar mediante otra Edge Function.
 
-Las funciones se validan contra Supabase Auth y el perfil administrador activo. La migración 004 bloquea el acceso directo desde el navegador a los tokens y a la tabla de estados OAuth.
+Las funciones se validan contra Supabase Auth y el perfil administrador activo. La migración 005 bloquea el acceso directo desde el navegador a los tokens y a la tabla de estados OAuth.
 
 ## Migraciones
 
-Ejecuta la migración `supabase/migrations/202610220004_google_calendar.sql` únicamente en el proyecto CuidaGest, después de las migraciones 001, 002 y 003. Si aún no están aplicadas, ejecútalas en orden. No ejecutes ningún SQL en tus otros proyectos.
+Cuando vayamos a activar la integración, ejecuta `supabase/migrations/202610220005_google_calendar.sql` únicamente en el proyecto CuidaGest y después de las migraciones 001–004. La migración 004 de citas puntuales no conecta Google; esa conexión requiere además configurar Google Cloud y desplegar las Edge Functions. No ejecutes ningún SQL en tus otros proyectos.
 
 ## Preparación de Google Cloud
 
