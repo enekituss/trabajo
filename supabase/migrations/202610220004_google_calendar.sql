@@ -83,7 +83,7 @@ create or replace function public.create_care_service(
 returns uuid
 language plpgsql
 set search_path = ''
-as $
+as $$
 declare
   v_service_id uuid;
   v_uid uuid;
@@ -114,7 +114,7 @@ begin
 
   return v_service_id;
 end;
-$;
+$$;
 
 revoke all on function public.create_care_service(uuid, uuid, text, timestamptz, timestamptz, text) from public, anon;
 grant execute on function public.create_care_service(uuid, uuid, text, timestamptz, timestamptz, text) to authenticated;
