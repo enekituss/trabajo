@@ -1,64 +1,76 @@
 # Base de datos y seguridad de CuidaGest
 
-## Decisión técnica propuesta
+## Decisión técnica
 
-Usar **Supabase con PostgreSQL** como base de datos gestionada, Supabase Auth para las cuentas del personal y Row Level Security (RLS) para que los permisos se apliquen dentro de la propia base de datos. El código de la web irá en GitHub; los registros de personas y servicios **no** se guardarán en el repositorio ni en el navegador.
+Usar **Supabase con PostgreSQL** como base de datos gestionada y Supabase Auth para el inicio de sesión. El código va en GitHub; los registros de cuidadores, usuarios y servicios no se guardarán en el repositorio ni en el navegador.
 
-Como la empresa está en España, al crear el proyecto habrá que elegir una región de la UE. La región concreta debe seleccionarse conscientemente en el panel de Supabase; Frankfurt (`eu-central-1`) es una opción regional disponible. Elegir región no garantiza por sí solo el cumplimiento del RGPD.
+Como la empresa está en España, al crear el proyecto hay que seleccionar una región de la UE. Frankfurt (`eu-central-1`) es una opción. La región por sí sola no garantiza el cumplimiento del RGPD.
 
-## Esquema inicial
+## Usuarios y permisos: un solo administrador
 
-La migración `supabase/migrations/202610220001_initial_schema.sql` crea:
+La primera versión tendrá **una única cuenta interna: la de tu madre**, que será administradora y podrá gestionar cuidadores, usuarios, disponibilidad, servicios y asignaciones.
 
-- `staff_profiles`: cuentas internas y roles (`admin`, `recruitment`, `coordination`).
-- `caregivers`: perfil profesional, datos de contacto necesarios y estado de selección.
-- `caregiver_availability`: disponibilidad semanal con rango de fechas opcional.
-- `clients`: ficha de la persona usuaria y datos operativos mínimos.
-- `services`: tipo, inicio, fin, estado y referencias de sincronización con Google Calendar.
-- `service_assignments`: asignaciones actuales e historial de cambios de cuidador.
-- `audit_events`: quién cambió qué registro, cuándo y qué campos cambiaron; no copia los valores antiguos/nuevos de datos personales.
+- Desactiva el registro público de cuentas en la configuración de autenticación de Supabase.
+- Crea la cuenta de tu madre desde el panel de Supabase Auth.
+- Solo después de crearla, copia su UUID real y crea su perfil de administración desde SQL Editor.
+- No publiques el UUID como secreto, pero tampoco compartas contraseñas ni tokens.
+- Una persona autenticada que no tenga un perfil interno activo no podrá leer ni modificar las tablas de la aplicación.
 
-Se usan claves foráneas, restricciones e índices básicos. La aplicación no tiene permiso de borrado normal: los registros se archivan o cambian de estado para evitar eliminaciones accidentales. Los cambios de datos importantes quedan registrados.
+El esquema mantiene el campo `role` para facilitar una futura ampliación, pero la migración de administrador único solo admite `admin`. La aplicación no tiene permiso para crear otros perfiles internos desde el navegador.
 
-## Estado actual: esquema preparado, base real aún no creada
+## Esquema de base de datos
 
-Subir la migración a GitHub **no crea automáticamente** una base de datos en la nube. Para activarla:
+La migración inicial `supabase/migrations/202610220001_initial_schema.sql` crea:
 
-1. Una persona autorizada de la empresa debe crear el proyecto de Supabase bajo una cuenta corporativa, activar la autenticación y seleccionar una región de la UE.
-2. Revisar la migración y ejecutarla en el proyecto de desarrollo desde el SQL Editor o mediante Supabase CLI.
-3. Crear una cuenta de personal en Supabase Auth.
-4. Tras crear esa cuenta, obtener su UUID en el panel de autenticación y dar de alta el primer perfil administrador desde el SQL Editor con una consulta similar a la siguiente, sustituyendo los valores por los reales:
-   ```sql
-   insert into public.staff_profiles (id, display_name, role)
-   values ('UUID-DE-LA-CUENTA-AUTORIZADA', 'Administrador inicial', 'admin');
-   ```
-5. Probar con cuentas de cada rol que solo puedan leer y cambiar los datos permitidos. Probar también que una persona sin iniciar sesión no puede acceder a ninguna ficha.
-6. Crear la conexión de la aplicación usando únicamente la clave pública/publishable en el navegador y manteniendo cualquier clave secreta exclusivamente en el servidor. Nunca subir contraseñas, claves de servicio o tokens a GitHub.
+- `staff_profiles`: perfil de la cuenta administradora.
+- `caregivers`: perfil profesional, contactos necesarios y estado.
+- `caregiver_availability`: disponibilidad semanal.
+- `clients`: ficha operativa de la persona usuaria.
+- `services`: fechas, horario, estado y campos de sincronización con Google Calendar.
+- `service_assignments`: asignación actual e historial de cambios.
+- `audit_events`: quién cambió un registro, cuándo y qué campos cambiaron; no copia los valores personales antiguos/nuevos.
 
-**No introduzcas datos reales hasta haber desplegado y probado los permisos y la recuperación de copias.** El esquema es una primera base técnica y aún requiere revisión, pruebas de políticas y despliegue antes de uso empresarial.
+La segunda migración `supabase/migrations/202610220002_single_admin.sql` deja las políticas de la aplicación con un solo rol, administrador. No ofrece borrado normal desde la app, para reducir el riesgo de eliminaciones accidentales.
+
+## Cómo aplicar las migraciones
+
+**Importante:** subir SQL a GitHub no crea una base de datos ni lo ejecuta automáticamente.
+
+- En un proyecto Supabase nuevo, abre SQL Editor y ejecuta el archivo `202610220001_initial_schema.sql` completo. Comprueba que terminó sin errores; después ejecuta el archivo `202610220002_single_admin.sql`.
+- Si ya habías ejecutado el esquema inicial en el proyecto CuidaGest, no lo repitas: ejecuta únicamente `202610220002_single_admin.sql`.
+- Antes de pulsar Run, confirma el nombre del proyecto en Supabase. No ejecutes estos archivos en ninguno de tus proyectos anteriores.
+
+Tras aplicar ambas migraciones, crea el primer usuario desde el panel de autenticación. Copia su UUID en la consulta siguiente y cambia el nombre de ejemplo por el nombre que prefieras. Ejecuta la consulta solo en SQL Editor del proyecto CuidaGest:
+
+```sql
+insert into public.staff_profiles (id, display_name, role)
+values ('UUID-REAL-DE-LA-CUENTA-DE-TU-MADRE', 'Administradora', 'admin');
+```
+
+El texto `UUID-REAL-DE-LA-CUENTA-DE-TU-MADRE` es un marcador: debes sustituirlo por el UUID que muestra Supabase Auth. No lo ejecutes tal cual.
 
 ## Copias de seguridad y recuperación
 
-Una base de datos persistente no significa que los datos sean imposibles de perder. Antes de producción habrá que:
+Una base de datos persistente no significa que no pueda perderse información. Antes de producción:
 
-- Confirmar el plan contratado y qué copias automáticas incluye.
-- Programar exportaciones cifradas fuera de la base principal y limitar quién puede recuperarlas.
-- Probar periódicamente una restauración en un entorno separado.
-- Definir quién responde ante borrados accidentales, pérdida de acceso o una caída del servicio.
-- Mantener un entorno de pruebas separado del de producción y aplicar cambios mediante migraciones versionadas.
+- Confirma el plan y las copias automáticas incluidas.
+- Programa exportaciones cifradas fuera de la base principal.
+- Prueba la restauración regularmente en un entorno separado.
+- Limita el acceso a copias y define quién responde ante pérdida de acceso, borrados accidentales o una caída.
+- Separa desarrollo y producción.
 
-La documentación actual de Supabase indica que los proyectos Pro, Team y Enterprise reciben copias diarias automáticas; para proyectos gratuitos recomienda exportaciones regulares propias. Para una herramienta de la que dependa el trabajo de una empresa, no debemos dar por suficiente una cuenta gratuita sin un plan de recuperación probado.
+Para una herramienta de la que depende el trabajo de una empresa, las copias y la recuperación deben probarse, no darse por supuestas.
 
-## Privacidad y RGPD
+## Privacidad
 
-Las fichas pueden incluir datos personales y, si se anotan necesidades derivadas de la salud, categorías especiales de datos. Antes de usarlos, la empresa deberá determinar la base jurídica, informar a las personas, limitar los campos al mínimo necesario, definir plazos de conservación y validar las medidas de seguridad con la persona responsable de protección de datos/asesoría de la empresa.
+Las fichas pueden contener datos personales y podrían incluir información de salud. Antes de usarlas con personas reales, la empresa debe revisar la base jurídica, informar a las personas, reducir los datos a lo imprescindible, definir plazos de conservación y validar las medidas con la persona responsable de protección de datos o asesoría.
 
-No añadiremos todavía una zona pública de documentos, historiales médicos, DNI ni otros datos de alta sensibilidad. Si finalmente hacen falta documentos, deberán utilizar almacenamiento privado con permisos específicos; no GitHub ni enlaces públicos.
+No uses este repositorio para guardar datos reales, documentos identificativos, contraseñas, claves privadas ni tokens.
 
 ## Referencias técnicas
 
 - Regiones: https://supabase.com/docs/guides/platform/regions
 - Copias de seguridad: https://supabase.com/docs/guides/platform/backups
 - Seguridad y RLS: https://supabase.com/docs/guides/database/postgres/row-level-security
-- Lista de comprobación de producción: https://supabase.com/docs/guides/deployment/going-into-prod
+- Preparación para producción: https://supabase.com/docs/guides/deployment/going-into-prod
 - AEPD, datos de salud: https://www.aepd.es/areas-de-actuacion/salud/tus-derechos-en-relacion-con-tus-datos-de-salud
