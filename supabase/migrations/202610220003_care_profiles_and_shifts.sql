@@ -29,6 +29,9 @@ alter table public.caregivers
   check (identity_document_type in ('NIE', 'DNI', 'Pasaporte', 'Otro'));
 
 -- Nuevos estados para que el proceso de selección sea explícito.
+alter table public.caregivers
+  drop constraint if exists caregivers_status_check;
+
 update public.caregivers
 set status = case status
   when 'pending_review' then 'under_review'
@@ -37,8 +40,6 @@ set status = case status
 end
 where status in ('pending_review', 'rejected');
 
-alter table public.caregivers
-  drop constraint if exists caregivers_status_check;
 alter table public.caregivers
   add constraint caregivers_status_check
   check (status in ('new_candidate', 'under_review', 'interview_scheduled', 'approved', 'not_suitable', 'inactive'));
