@@ -207,7 +207,7 @@ Deno.serve(async (req: Request) => {
       result = await syncService(db, token, body.service_id);
     } else if (action === "sync_all") {
       const [careRes, shiftRes, serviceRes] = await Promise.all([
-        db.from("caregivers").select("id").not("nie_expiry_date", "is", null).limit(80),
+        db.from("caregivers").select("id").limit(80),
         db.from("care_shifts").select("id").limit(120),
         db.from("services").select("id").limit(80)
       ]);
@@ -215,7 +215,18 @@ Deno.serve(async (req: Request) => {
       let ok = 0, failed = 0;
       const errors: string[] = [];
       for (const row of careRes.data || []) {
-        try { await syncCaregiverExpiry(db, token, row.id); ok++; } catch (_error) { failed++; errors.push("Un aviso de documentación no se pudo sincronizar."); }
+        try {
+          const result = await syncCaregiverExpiry(db, token, row.id);
+          if (result.alerts?.some((alert: any) => !alert.synced)) {
+            failed++;
+            errors.push("Un aviso de documentación no se pudo sincronizar.");
+          } else {
+            ok++;
+          }
+        } catch (_error) {
+          failed++;
+          errors.push("Un aviso de documentación no se pudo sincronizar.");
+        }
       }
       for (const row of shiftRes.data || []) {
         try { await syncShift(db, token, row); ok++; } catch (_error) { failed++; errors.push("Un turno no se pudo sincronizar."); }
