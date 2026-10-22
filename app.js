@@ -66,6 +66,8 @@ let currentUser = null;
 let caregivers = [];
 let clients = [];
 let shifts = [];
+let services = [];
+let calendarConnected = false;
 let modalType = "caregiver";
 let editingId = null;
 let toastTimer = null;
@@ -200,24 +202,51 @@ async function refreshData() {
   loadingData = true;
   setTableLoading();
   try {
-    const [careResult, clientResult, shiftResult] = await Promise.all([
+    const [careResult, clientResult, shiftResult, serviceResult, assignmentResult] = await Promise.all([
       authClient.from("caregivers").select("*").order("created_at", { ascending: false }),
       authClient.from("clients").select("*").order("created_at", { ascending: false }),
-      authClient.from("care_shifts").select("*").order("weekday").order("start_time")
+      authClient.from("care_shifts").select("*").order("weekday").order("start_time"),
+      authClient.from("services").select("*").order("starts_at", { ascending: true }),
+      authClient.from("service_assignments").select("service_id,caregiver_id").is("ended_at", null)
     ]);
-    const failed = [careResult, clientResult, shiftResult].find(r => r.error);
+    const failed = [careResult, clientResult, shiftResult, serviceResult, assignmentResult].find(r => r.error);
     if (failed) {
       console.error("Error al cargar datos de CuidaGest:", failed.error);
-      toast("No se han podido cargar los datos. Comprueba que ejecutaste las tres migraciones en el proyecto de CuidaGest.", true);
+      toast("No se han podido cargar los datos. Comprueba las cuatro migraciones en el proyecto de CuidaGest.", true);
       caregivers = [];
       clients = [];
       shifts = [];
+      services = [];
     } else {
       caregivers = careResult.data || [];
       clients = clientResult.data || [];
       shifts = shiftResult.data || [];
+      const assignments = assignmentResult.data || [];
+      services = (serviceResult.data || []).map(service => ({
+        ...service,
+        caregiver_id: assignments.find(a => a.service_id === service.id)?.caregiver_id || null
+      }));
     }
     renderAll();
+    await refreshCalendarStatus();
+    const url = new URL(window.location.href);
+    const calendarResult = url.searchParams.get("calendar");
+    if (calendarResult) {
+      url.searchParams.delete("calendar");
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      if (calendarResult === "connected") {
+        toast("Google Calendar conectado. Sincronizando turnos y avisos…");
+        const synced = await invokeCalendar("sync_all", {}, true);
+        if (synced.ok) {
+          await refreshDataAfterCalendarSync();
+          toast(synced.data?.result?.failed ? "Conexión realizada, pero algunos eventos requieren revisión." : "Google Calendar se ha sincronizado.");
+        } else {
+          toast("Google se ha conectado, pero no se han podido sincronizar todos los eventos. Revisa la configuración.", true);
+        }
+      } else {
+        toast(calendarResult === "denied" ? "No se ha concedido acceso a Google Calendar." : "No se pudo completar la conexión con Google Calendar. Revisa la configuración.", true);
+      }
+    }
   } catch (error) {
     console.error(error);
     toast("Error de conexión al leer la base de datos.", true);
@@ -229,6 +258,7 @@ function setTableLoading() {
   $("#caregivers-table").innerHTML = '<tr><td colspan="6" class="loading-row">Cargando desde la base de datos…</td></tr>';
   $("#clients-table").innerHTML = '<tr><td colspan="5" class="loading-row">Cargando desde la base de datos…</td></tr>';
   $("#shifts-table").innerHTML = '<tr><td colspan="7" class="loading-row">Cargando desde la base de datos…</td></tr>';
+  $("#services-table").innerHTML = '<tr><td colspan="6" class="loading-row">Cargando desde la base de datos…</td></tr>';
 }
 
 function renderDashboard() {
