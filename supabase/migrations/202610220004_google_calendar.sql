@@ -87,6 +87,10 @@ as $$
 declare
   v_service_id uuid;
   v_uid uuid;
+  v_local_start timestamp without time zone;
+  v_local_end timestamp without time zone;
+  v_service_date date;
+  v_weekday smallint;
 begin
   v_uid := (select auth.uid());
   if (select public.current_staff_role()) is distinct from 'admin' then
@@ -98,11 +102,72 @@ begin
   if length(trim(coalesce(p_service_type, ''))) = 0 or length(trim(p_service_type)) > 120 then
     raise exception 'El tipo de servicio no es válido.' using errcode = '22023';
   end if;
+
+  v_local_start := p_starts_at at time zone 'Europe/Madrid';
+  v_local_end := p_ends_at at time zone 'Europe/Madrid';
+  if v_local_start::date <> v_local_end::date then
+    raise exception 'La cita debe empezar y terminar el mismo día.' using errcode = '22007';
+  end if;
+  v_service_date := v_local_start::date;
+  v_weekday := extract(isodow from v_local_start)::smallint;
+
   if not exists(select 1 from public.clients c where c.id = p_client_id and c.status = 'active') then
     raise exception 'La persona atendida no está activa.' using errcode = '23503';
   end if;
   if not exists(select 1 from public.caregivers c where c.id = p_caregiver_id and c.status = 'approved') then
     raise exception 'La cuidadora no está aprobada.' using errcode = '23503';
+  end if;
+
+  -- Check against other punctual appointments assigned to this caregiver or client.
+  if exists (
+    select 1
+    from public.services s
+    join public.service_assignments a on a.service_id = s.id
+    where a.caregiver_id = p_caregiver_id
+      and a.ended_at is null
+      and s.status <> 'cancelled'
+      and p_starts_at < s.ends_at
+      and p_ends_at > s.starts_at
+  ) then
+    raise exception 'La cuidadora ya tiene una cita en ese horario.' using errcode = '23P01';
+  end if;
+  if exists (
+    select 1
+    from public.services s
+    where s.client_id = p_client_id
+      and s.status <> 'cancelled'
+      and p_starts_at < s.ends_at
+      and p_ends_at > s.starts_at
+  ) then
+    raise exception 'La persona atendida ya tiene una cita en ese horario.' using errcode = '23P01';
+  end if;
+
+  -- Check against the caregiver's existing weekly recurring shift.
+  if exists (
+    select 1
+    from public.care_shifts cs
+    where cs.status = 'active'
+      and cs.caregiver_id = p_caregiver_id
+      and cs.weekday = v_weekday
+      and cs.valid_from <= v_service_date
+      and (cs.valid_until is null or cs.valid_until >= v_service_date)
+      and v_local_start::time < cs.end_time
+      and v_local_end::time > cs.start_time
+  ) then
+    raise exception 'La cuidadora ya tiene un turno recurrente en esa franja horaria.' using errcode = '23P01';
+  end if;
+  if exists (
+    select 1
+    from public.care_shifts cs
+    where cs.status = 'active'
+      and cs.client_id = p_client_id
+      and cs.weekday = v_weekday
+      and cs.valid_from <= v_service_date
+      and (cs.valid_until is null or cs.valid_until >= v_service_date)
+      and v_local_start::time < cs.end_time
+      and v_local_end::time > cs.start_time
+  ) then
+    raise exception 'La persona atendida ya tiene un turno recurrente en esa franja horaria.' using errcode = '23P01';
   end if;
 
   insert into public.services(client_id, service_type, starts_at, ends_at, status, internal_notes, created_by)
