@@ -44,10 +44,10 @@
 
       <div class="nav-label">MENÚ PRINCIPAL</div>
       <nav class="main-nav" aria-label="Navegación principal">
-        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">▦</span> Panel general</button>
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">▦</span> Panel de control</button>
         <button class="nav-item" data-view="caregivers"><span class="nav-icon">♙</span> Cuidadores <span class="nav-count" id="caregiver-nav-count">6</span></button>
         <button class="nav-item" data-view="clients"><span class="nav-icon">♡</span> Usuarios del servicio <span class="nav-count" id="client-nav-count">4</span></button>
-        <button class="nav-item" data-view="calendar"><span class="nav-icon">▦</span> Agenda y servicios</button>
+        <button class="nav-item" data-view="shifts"><span class="nav-icon">◷</span> Turnos y asignaciones</button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -67,7 +67,7 @@
     <main class="main-area">
       <header class="topbar">
         <button class="mobile-menu" id="mobile-menu" aria-label="Abrir menú">☰</button>
-        <div class="breadcrumbs"><span>CuidaGest</span><span class="crumb-divider">/</span><strong id="breadcrumb-title">Panel general</strong></div>
+        <div class="breadcrumbs"><span>CuidaGest</span><span class="crumb-divider">/</span><strong id="breadcrumb-title">Panel de control</strong></div>
         <div class="topbar-right">
           <span class="demo-pill"><span class="status-dot"></span> Modo demo</span>
           <div class="avatar avatar-user" id="topbar-avatar">AD</div>
@@ -91,7 +91,7 @@
 
           <div class="dashboard-grid">
             <section class="panel agenda-panel">
-              <div class="panel-heading"><div><h2>Agenda de hoy</h2><p>Servicios programados de ejemplo</p></div><button class="text-button" data-view-link="calendar">Ver agenda <span>↗</span></button></div>
+              <div class="panel-heading"><div><h2>Agenda de hoy</h2><p>Servicios programados de ejemplo</p></div><button class="text-button" data-view-link="shifts">Ver turnos <span>↗</span></button></div>
               <div class="table-scroll"><table><thead><tr><th>HORA</th><th>USUARIO</th><th>CUIDADOR/A</th><th>SERVICIO</th><th>ESTADO</th></tr></thead><tbody id="today-table"></tbody></table></div>
               <div class="panel-bottom"><span class="legend-dot"></span> <span>Horario ilustrativo · no son citas reales</span></div>
             </section>
@@ -126,10 +126,11 @@
           <section class="panel"><div class="panel-heading"><div><h2>Fichas del servicio</h2><p>Perfiles de demostración; no contienen información real</p></div><span class="soft-tag" id="client-result-count">4 usuarios</span></div><div class="table-scroll"><table><thead><tr><th>USUARIO</th><th>TIPO DE APOYO</th><th>FRECUENCIA</th><th>CUIDADOR/A ASIGNADO/A</th><th>ESTADO</th></tr></thead><tbody id="clients-table"></tbody></table></div></section>
         </section>
 
-        <section class="view" id="view-calendar">
-          <div class="page-heading"><div><p class="eyebrow">PLANIFICACIÓN</p><h1>Agenda y servicios</h1><p class="page-subtitle">Una vista inicial para organizar turnos y asignaciones.</p></div><button class="button button-primary" id="calendar-info-button">＋ Nuevo servicio</button></div>
-          <div class="integration-notice"><div class="integration-symbol">▦</div><div><strong>Integración con Google Calendar pendiente</strong><p>Esta agenda es solo una maqueta. La sincronización real se añadirá cuando configuremos el acceso seguro y la base de datos.</p></div><span class="soft-tag">Próxima fase</span></div>
-          <section class="panel calendar-panel"><div class="panel-heading"><div><h2>Servicios de ejemplo</h2><p>Vista semanal ilustrativa</p></div><span class="week-label">Semana de demostración</span></div><div class="calendar-legend"><span><i class="legend-color mint-bg"></i>Atención personal</span><span><i class="legend-color blue-bg"></i>Acompañamiento</span><span><i class="legend-color lilac-bg"></i>Apoyo doméstico</span></div><div id="calendar-list" class="calendar-list"></div></section>
+        <section class="view" id="view-shifts">
+          <div class="page-heading"><div><p class="eyebrow">PLANIFICACIÓN SEMANAL</p><h1>Turnos y asignaciones</h1><p class="page-subtitle">Asigna cuidadoras a personas atendidas por días y franjas horarias.</p></div><button class="button button-primary" data-open-modal="shift"><span>＋</span> Nuevo turno</button></div>
+          <div class="integration-notice"><div class="integration-symbol">↗</div><div><strong>Rutas con Google Maps</strong><p>Los turnos pueden abrir la ruta a la dirección de servicio. Los avisos de caducidad se mostrarán en el panel de control.</p></div><span class="soft-tag">Mapas preparados</span></div>
+          <div class="toolbar"><label class="search-box"><span>⌕</span><input id="shift-search" type="search" placeholder="Buscar cuidadora, persona o día…"></label><select id="shift-filter" aria-label="Filtrar turnos"><option value="active">Turnos activos</option><option value="all">Todos los turnos</option><option value="paused">Pausados</option></select></div>
+          <section class="panel"><div class="panel-heading"><div><h2>Horario recurrente</h2><p>Una fila por cada día asignado</p></div><span class="soft-tag" id="shift-result-count">0 turnos</span></div><div class="table-scroll"><table><thead><tr><th>DÍA</th><th>HORARIO</th><th>CUIDADORA</th><th>PERSONA ATENDIDA</th><th>UBICACIÓN</th><th>VIGENCIA</th><th>ESTADO</th></tr></thead><tbody id="shifts-table"></tbody></table></div></section>
         </section>
 
         <footer class="app-footer"><span>CuidaGest · Prototipo de gestión de cuidados</span><span>Demo privada pendiente de autenticación y almacenamiento seguro</span></footer>
