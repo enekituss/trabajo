@@ -113,6 +113,10 @@ begin
     pg_catalog.hashtext(new.caregiver_id::text),
     new.weekday
   );
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtext(new.client_id::text),
+    new.weekday
+  );
 
   if exists (
     select 1 from public.care_shifts s
