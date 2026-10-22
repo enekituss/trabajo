@@ -103,6 +103,7 @@
               <button class="quick-action" data-open-modal="caregiver"><span class="quick-icon mint">＋</span><span><strong>Nueva cuidadora</strong><small>Perfil, documentación y etiquetas</small></span><b>→</b></button>
               <button class="quick-action" data-open-modal="client"><span class="quick-icon lilac">♡</span><span><strong>Nueva persona atendida</strong><small>Ficha y ubicación del servicio</small></span><b>→</b></button>
               <button class="quick-action" data-open-modal="shift"><span class="quick-icon blue">◷</span><span><strong>Asignar turnos</strong><small>Días, horario y cuidadora</small></span><b>→</b></button>
+              <button class="quick-action" data-open-modal="service"><span class="quick-icon amber">＋</span><span><strong>Nueva cita puntual</strong><small>Fecha, horario y asignación</small></span><b>→</b></button>
             </div>
           </section>
         </section>
@@ -120,10 +121,11 @@
         </section>
 
         <section class="view" id="view-shifts">
-          <div class="page-heading"><div><p class="eyebrow">PLANIFICACIÓN SEMANAL</p><h1>Turnos y asignaciones</h1><p class="page-subtitle">Asigna cuidadoras a personas atendidas por días y franjas horarias.</p></div><button class="button button-primary" data-open-modal="shift"><span>＋</span> Nuevo turno</button></div>
-          <div class="integration-notice"><div class="integration-symbol">↗</div><div><strong>Rutas con Google Maps</strong><p>Los turnos pueden abrir la ruta a la dirección de servicio. Los avisos de caducidad se mostrarán en el panel de control.</p></div><span class="soft-tag">Mapas preparados</span></div>
+          <div class="page-heading"><div><p class="eyebrow">PLANIFICACIÓN SEMANAL</p><h1>Turnos y asignaciones</h1><p class="page-subtitle">Asigna cuidadoras a personas atendidas por días y franjas horarias.</p></div><div class="heading-actions"><button class="button button-outline" data-open-modal="service"><span>＋</span> Nueva cita</button><button class="button button-primary" data-open-modal="shift"><span>＋</span> Nuevo turno</button></div></div>
+          <div class="integration-notice"><div class="integration-symbol">↗</div><div class="integration-main"><strong>Google Calendar</strong><p>Conecta el calendario para sincronizar turnos recurrentes, citas puntuales y recordatorios de caducidad. Las rutas se abren en Google Maps.</p><small id="calendar-connection-status" class="field-help">Comprobando conexión…</small></div><button class="button button-outline" id="connect-google-calendar" type="button">Conectar Google Calendar</button><button class="button button-primary" id="sync-google-calendar" type="button" disabled>Sincronizar eventos</button></div>
           <div class="toolbar"><label class="search-box"><span>⌕</span><input id="shift-search" type="search" placeholder="Buscar cuidadora, persona o día…"></label><select id="shift-filter" aria-label="Filtrar turnos"><option value="active">Turnos activos</option><option value="all">Todos los turnos</option><option value="paused">Pausados</option></select></div>
           <section class="panel"><div class="panel-heading"><div><h2>Horario recurrente</h2><p>Una fila por cada día asignado</p></div><span class="soft-tag" id="shift-result-count">0 turnos</span></div><div class="table-scroll"><table><thead><tr><th>DÍA</th><th>HORARIO</th><th>CUIDADORA</th><th>PERSONA ATENDIDA</th><th>UBICACIÓN</th><th>VIGENCIA</th><th>ESTADO</th></tr></thead><tbody id="shifts-table"></tbody></table></div></section>
+          <section class="panel services-panel"><div class="panel-heading"><div><h2>Citas puntuales</h2><p>Servicios con una fecha y hora concreta</p></div><span class="soft-tag" id="services-result-count">0 citas</span></div><div class="table-scroll"><table><thead><tr><th>FECHA Y HORA</th><th>PERSONA ATENDIDA</th><th>CUIDADORA</th><th>SERVICIO</th><th>CALENDAR</th><th></th></tr></thead><tbody id="services-table"></tbody></table></div></section>
         </section>
 
         <footer class="app-footer"><span>CuidaGest · Prototipo de gestión de cuidados</span><span>Demo privada pendiente de autenticación y almacenamiento seguro</span></footer>
@@ -206,9 +208,22 @@
           </div>
           <p class="form-note">El sistema impedirá asignaciones recurrentes superpuestas. Esto aún no crea eventos en Google Calendar.</p>
         </div>
+        <div id="service-fields" hidden>
+          <div class="form-section-title">Cita puntual</div>
+          <div class="form-grid">
+            <div><label class="field-label" for="sv-client">Persona atendida *</label><select class="form-input" id="sv-client" required></select></div>
+            <div><label class="field-label" for="sv-caregiver">Cuidadora apta *</label><select class="form-input" id="sv-caregiver" required></select></div>
+            <div class="field-span-2"><label class="field-label" for="sv-type">Tipo de servicio *</label><input class="form-input" id="sv-type" maxlength="120" required value="Atención domiciliaria"></div>
+            <div><label class="field-label" for="sv-date">Fecha *</label><input class="form-input" id="sv-date" type="date" required></div>
+            <div><label class="field-label" for="sv-start">Hora de inicio *</label><input class="form-input" id="sv-start" type="time" required></div>
+            <div><label class="field-label" for="sv-end">Hora de fin *</label><input class="form-input" id="sv-end" type="time" required></div>
+            <div class="field-span-2"><label class="field-label" for="sv-notes">Notas operativas</label><textarea class="form-input" id="sv-notes" rows="2" maxlength="1500" placeholder="Solo detalles necesarios para prestar el servicio."></textarea></div>
+          </div>
+          <p class="form-note">Al guardar, la cita se registrará en Supabase. Si Google Calendar está conectado, también se enviará al calendario con recordatorios.</p>
+        </div>
         <div class="modal-actions"><button type="button" class="button button-outline" id="cancel-modal">Cancelar</button><button type="submit" class="button button-primary" id="record-submit">Guardar</button></div>
       </form>
-      <p class="form-note">Los cambios solo se mantienen en esta pestaña y se borran al recargar.</p>
+      <p class="form-note">Las fichas y los horarios se guardan en Supabase. La sincronización con Google Calendar requiere completar la configuración del servicio.</p>
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
