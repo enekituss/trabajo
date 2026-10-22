@@ -1,0 +1,5 @@
+# CuidaGest Supabase Edge Functions.
+# Google OAuth callback is the only unauthenticated HTTP endpoint; it validates a
+# short-lived single-use state before exchanging Google's authorization code.
+[functions.google-calendar-callback]
+verify_jwt = false
