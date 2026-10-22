@@ -564,7 +564,7 @@ function resetModal(type, record = null) {
     Object.entries(fields).forEach(([id, value]) => { const el = $("#" + id); if (el) el.value = value ?? ""; });
   } else if (type === "shift") {
     $("#sh-from").value = todayIso();
-    $("#shift-fields input[name='weekday']").forEach(box => { box.checked = false; });
+    $$("#shift-fields input[name='weekday']").forEach(box => { box.checked = false; });
   } else if (type === "service") {
     $("#sv-date").value = todayIso();
     $("#sv-start").value = "09:00";
