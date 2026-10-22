@@ -107,8 +107,8 @@ function showView(name, trackHistory = true) {
       window.history.pushState({ cuidaGest: true, view: name }, "", route);
     }
   }
-  $(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
-  $(".nav-item[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  $$(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
+  $$(".nav-item[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === name));
   $("#breadcrumb-title").textContent = names[name];
   $("#sidebar").classList.remove("open");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -843,7 +843,7 @@ window.addEventListener("popstate", (event) => {
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeModal(); });
 
 // La marca de CuidaGest vuelve al panel principal sin saltar al inicio del documento.
-$(".brand").forEach(link => link.addEventListener("click", event => {
+$$(".brand").forEach(link => link.addEventListener("click", event => {
   event.preventDefault();
   if (currentUser) showView("dashboard");
 }));
