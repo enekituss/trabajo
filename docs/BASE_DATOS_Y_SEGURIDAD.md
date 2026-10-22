@@ -18,6 +18,12 @@ La primera versión tendrá **una única cuenta interna: la de tu madre**, que s
 
 El esquema mantiene el campo `role` para facilitar una futura ampliación, pero la migración de administrador único solo admite `admin`. La aplicación no tiene permiso para crear otros perfiles internos desde el navegador.
 
+## Inicio de sesión y configuración de la web
+
+La pantalla de inicio de sesión usa Supabase Auth con correo y contraseña, no tiene enlace de registro y verifica que la cuenta tenga un perfil administrador activo. La sesión se guarda en `sessionStorage` para que normalmente se solicite iniciar sesión de nuevo al cerrar la pestaña.
+
+Para configurar la conexión, en `supabase-config.js` se copian únicamente la Project URL y la publishable key del proyecto CuidaGest. Nunca se debe introducir una service_role key o secret key en archivos JavaScript publicados. En la configuración de autenticación de Supabase, desactiva las altas públicas («Allow new users to sign up») y añade la URL final de la aplicación entre las URL permitidas. La interfaz actual sigue siendo una demostración, aunque el acceso se conecte: aún se necesita conectar las operaciones de los formularios con la base de datos.
+
 ## Esquema de base de datos
 
 La migración inicial `supabase/migrations/202610220001_initial_schema.sql` crea:
