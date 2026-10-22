@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#155e56">
+  <title>CuidaGest · Gestión de cuidados</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="CuidaGest, inicio">
+        <span class="brand-mark">c<span>+</span></span>
+        <span><strong>CuidaGest</strong><small>Gestión de cuidados</small></span>
+      </a>
+
+      <div class="nav-label">MENÚ PRINCIPAL</div>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">▦</span> Panel general</button>
+        <button class="nav-item" data-view="caregivers"><span class="nav-icon">♙</span> Cuidadores <span class="nav-count" id="caregiver-nav-count">6</span></button>
+        <button class="nav-item" data-view="clients"><span class="nav-icon">♡</span> Usuarios del servicio <span class="nav-count" id="client-nav-count">4</span></button>
+        <button class="nav-item" data-view="calendar"><span class="nav-icon">▦</span> Agenda y servicios</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="help-card">
+          <div class="help-icon">i</div>
+          <strong>Prototipo inicial</strong>
+          <p>Esta versión usa datos de ejemplo. No introduzcas información real de personas.</p>
+        </div>
+        <div class="profile-mini">
+          <div class="avatar avatar-green">CG</div>
+          <div><strong>Coordinación</strong><small>Vista de demostración</small></div>
+          <span class="profile-dots">•••</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="Abrir menú">☰</button>
+        <div class="breadcrumbs"><span>CuidaGest</span><span class="crumb-divider">/</span><strong id="breadcrumb-title">Panel general</strong></div>
+        <div class="topbar-right">
+          <span class="demo-pill"><span class="status-dot"></span> Modo demo</span>
+          <div class="avatar avatar-user">CO</div>
+        </div>
+      </header>
+
+      <div class="content-wrap">
+        <section class="view active" id="view-dashboard">
+          <div class="page-heading">
+            <div><p class="eyebrow">RESUMEN DE ACTIVIDAD</p><h1>Buenos días <span class="wave">✳</span></h1><p class="page-subtitle">Aquí tienes el estado general de los cuidados y los servicios.</p></div>
+            <button class="button button-primary" data-open-modal="caregiver"><span>＋</span> Añadir cuidador</button>
+          </div>
+
+          <div class="stat-grid">
+            <article class="stat-card"><div class="stat-top"><span>Cuidadores registrados</span><span class="stat-icon mint">♙</span></div><div class="stat-number" id="stat-caregivers">6</div><div class="stat-foot"><span class="tiny-dot green"></span> <span id="stat-approved">4 aptos</span><span class="stat-muted">en la base de datos</span></div></article>
+            <article class="stat-card"><div class="stat-top"><span>Usuarios activos</span><span class="stat-icon lilac">♡</span></div><div class="stat-number" id="stat-clients">4</div><div class="stat-foot"><span class="tiny-dot purple"></span> Servicios en seguimiento</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Servicios de hoy</span><span class="stat-icon blue">◷</span></div><div class="stat-number">5</div><div class="stat-foot"><span class="tiny-dot blue-dot"></span> <span>Según agenda de ejemplo</span></div></article>
+            <article class="stat-card"><div class="stat-top"><span>Pendientes de valorar</span><span class="stat-icon amber">◎</span></div><div class="stat-number" id="stat-pending">2</div><div class="stat-foot"><span class="tiny-dot orange"></span> Requieren revisión</div></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel agenda-panel">
+              <div class="panel-heading"><div><h2>Agenda de hoy</h2><p>Servicios programados de ejemplo</p></div><button class="text-button" data-view-link="calendar">Ver agenda <span>↗</span></button></div>
+              <div class="table-scroll"><table><thead><tr><th>HORA</th><th>USUARIO</th><th>CUIDADOR/A</th><th>SERVICIO</th><th>ESTADO</th></tr></thead><tbody id="today-table"></tbody></table></div>
+              <div class="panel-bottom"><span class="legend-dot"></span> <span>Horario ilustrativo · no son citas reales</span></div>
+            </section>
+
+            <section class="panel status-panel">
+              <div class="panel-heading"><div><h2>Proceso de selección</h2><p>Estado de los candidatos demo</p></div><span class="soft-tag">Actualizado ahora</span></div>
+              <div class="selection-total"><strong id="selection-total">6</strong><span>candidatos registrados</span></div>
+              <div class="progress-stack"><div class="progress-row"><div><span class="progress-label"><i class="progress-dot approved"></i>Aptos</span><strong id="progress-approved">4</strong></div><div class="progress-track"><span id="bar-approved" class="bar approved-bar" style="width:66.7%"></span></div></div><div class="progress-row"><div><span class="progress-label"><i class="progress-dot review"></i>En valoración</span><strong id="progress-review">2</strong></div><div class="progress-track"><span id="bar-review" class="bar review-bar" style="width:33.3%"></span></div></div><div class="progress-row"><div><span class="progress-label"><i class="progress-dot rejected"></i>No aptos</span><strong id="progress-rejected">0</strong></div><div class="progress-track"><span id="bar-rejected" class="bar rejected-bar" style="width:0%"></span></div></div></div>
+              <button class="button button-outline full-width" data-view-link="caregivers">Gestionar candidatos <span>→</span></button>
+            </section>
+          </div>
+
+          <section class="panel quick-panel">
+            <div class="panel-heading"><div><h2>Accesos rápidos</h2><p>Las tareas habituales, a mano</p></div></div>
+            <div class="quick-grid">
+              <button class="quick-action" data-open-modal="caregiver"><span class="quick-icon mint">＋</span><span><strong>Nuevo cuidador</strong><small>Registrar un candidato</small></span><b>→</b></button>
+              <button class="quick-action" data-open-modal="client"><span class="quick-icon lilac">♡</span><span><strong>Nuevo usuario</strong><small>Crear ficha del servicio</small></span><b>→</b></button>
+              <button class="quick-action" data-view-link="calendar"><span class="quick-icon blue">▦</span><span><strong>Consultar agenda</strong><small>Ver servicios planificados</small></span><b>→</b></button>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-caregivers">
+          <div class="page-heading"><div><p class="eyebrow">EQUIPO Y SELECCIÓN</p><h1>Cuidadores</h1><p class="page-subtitle">Consulta los perfiles y revisa el estado de cada candidatura.</p></div><button class="button button-primary" data-open-modal="caregiver"><span>＋</span> Añadir cuidador</button></div>
+          <div class="toolbar"><label class="search-box"><span>⌕</span><input id="caregiver-search" type="search" placeholder="Buscar por nombre o zona…"></label><select id="caregiver-filter" aria-label="Filtrar por estado"><option value="all">Todos los estados</option><option value="Apto">Apto</option><option value="En valoración">En valoración</option><option value="No apto">No apto</option></select></div>
+          <section class="panel"><div class="panel-heading"><div><h2>Perfiles registrados</h2><p>Información ficticia para probar el funcionamiento</p></div><span class="soft-tag" id="caregiver-result-count">6 perfiles</span></div><div class="table-scroll"><table><thead><tr><th>CUIDADOR/A</th><th>ZONA</th><th>EXPERIENCIA</th><th>DISPONIBILIDAD</th><th>VALORACIÓN</th><th>ESTADO</th></tr></thead><tbody id="caregivers-table"></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="view-clients">
+          <div class="page-heading"><div><p class="eyebrow">PERSONAS ATENDIDAS</p><h1>Usuarios del servicio</h1><p class="page-subtitle">Consulta las necesidades de atención y la asignación de cuidadores.</p></div><button class="button button-primary" data-open-modal="client"><span>＋</span> Añadir usuario</button></div>
+          <div class="toolbar"><label class="search-box"><span>⌕</span><input id="client-search" type="search" placeholder="Buscar por nombre o servicio…"></label></div>
+          <section class="panel"><div class="panel-heading"><div><h2>Fichas del servicio</h2><p>Perfiles de demostración; no contienen información real</p></div><span class="soft-tag" id="client-result-count">4 usuarios</span></div><div class="table-scroll"><table><thead><tr><th>USUARIO</th><th>TIPO DE APOYO</th><th>FRECUENCIA</th><th>CUIDADOR/A ASIGNADO/A</th><th>ESTADO</th></tr></thead><tbody id="clients-table"></tbody></table></div></section>
+        </section>
+
+        <section class="view" id="view-calendar">
+          <div class="page-heading"><div><p class="eyebrow">PLANIFICACIÓN</p><h1>Agenda y servicios</h1><p class="page-subtitle">Una vista inicial para organizar turnos y asignaciones.</p></div><button class="button button-primary" id="calendar-info-button">＋ Nuevo servicio</button></div>
+          <div class="integration-notice"><div class="integration-symbol">▦</div><div><strong>Integración con Google Calendar pendiente</strong><p>Esta agenda es solo una maqueta. La sincronización real se añadirá cuando configuremos el acceso seguro y la base de datos.</p></div><span class="soft-tag">Próxima fase</span></div>
+          <section class="panel calendar-panel"><div class="panel-heading"><div><h2>Servicios de ejemplo</h2><p>Vista semanal ilustrativa</p></div><span class="week-label">Semana de demostración</span></div><div class="calendar-legend"><span><i class="legend-color mint-bg"></i>Atención personal</span><span><i class="legend-color blue-bg"></i>Acompañamiento</span><span><i class="legend-color lilac-bg"></i>Apoyo doméstico</span></div><div id="calendar-list" class="calendar-list"></div></section>
+        </section>
+
+        <footer class="app-footer"><span>CuidaGest · Prototipo de gestión de cuidados</span><span>Demo privada pendiente de autenticación y almacenamiento seguro</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-heading"><div><p class="eyebrow">MODO DEMOSTRACIÓN</p><h2 id="modal-title">Añadir cuidador</h2></div><button class="icon-button" id="close-modal" aria-label="Cerrar ventana">×</button></div>
+      <p class="modal-intro" id="modal-intro">Añade un perfil ficticio para probar la interfaz. No uses datos personales reales.</p>
+      <form id="record-form">
+        <input type="hidden" id="record-type" value="caregiver">
+        <label class="field-label" for="record-name">Nombre de ejemplo <span>*</span></label><input class="form-input" id="record-name" name="name" required maxlength="70" placeholder="Ej. Alex Demo">
+        <div id="caregiver-fields">
+          <label class="field-label" for="record-zone">Zona de trabajo</label><input class="form-input" id="record-zone" name="zone" maxlength="50" placeholder="Ej. Centro">
+          <div class="form-row"><div><label class="field-label" for="record-experience">Experiencia</label><select class="form-input" id="record-experience" name="experience"><option>Sin experiencia</option><option>Menos de 2 años</option><option>2–5 años</option><option>Más de 5 años</option></select></div><div><label class="field-label" for="record-status">Estado</label><select class="form-input" id="record-status" name="status"><option>En valoración</option><option>Apto</option><option>No apto</option></select></div></div>
+        </div>
+        <div id="client-fields" hidden>
+          <label class="field-label" for="record-support">Tipo de apoyo</label><select class="form-input" id="record-support" name="support"><option>Apoyo personal</option><option>Acompañamiento</option><option>Apoyo doméstico</option><option>Apoyo nocturno</option><option>Atención por horas</option></select>
+          <label class="field-label" for="record-assigned">Cuidador/a asignado/a</label><select class="form-input" id="record-assigned" name="assigned"></select>
+        </div>
+        <div class="modal-actions"><button type="button" class="button button-outline" id="cancel-modal">Cancelar</button><button type="submit" class="button button-primary">Añadir a la demo</button></div>
+      </form>
+      <p class="form-note">Los cambios solo se mantienen en esta pestaña y se borran al recargar.</p>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
