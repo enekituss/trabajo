@@ -564,7 +564,7 @@ function resetModal(type, record = null) {
   const title = { caregiver: "Cuidadora", client: "persona atendida", shift: "turno recurrente", service: "cita puntual" }[type];
   $("#modal-title").textContent = (editingId ? "Editar " : "Nueva ") + title;
   $("#modal-intro").textContent = type === "caregiver"
-    ? "Completa los datos profesionales. Guarda solo la información necesaria; no introduzcas el número completo del NIE."
+    ? "Completa los datos profesionales y la documentación necesaria para la ficha privada."
     : type === "client"
       ? "Registra los datos operativos y la dirección exacta a la que deberá acudir la cuidadora."
       : type === "shift"
@@ -579,6 +579,7 @@ function resetModal(type, record = null) {
       "cg-last-name": record.last_name || "", "cg-second-last-name": record.second_last_name || "",
       "cg-birth-date": dateForInput(record.birth_date), "cg-phone": record.phone, "cg-email": record.email,
       "cg-nationality": record.nationality, "cg-doc-type": record.identity_document_type || "NIE",
+      "cg-doc-number": record.identity_document_number || "",
       "cg-nie-expiry": dateForInput(record.nie_expiry_date), "cg-address": record.home_address,
       "cg-city": record.city, "cg-province": record.province, "cg-postal": record.postal_code,
       "cg-zone": record.work_area, "cg-availability": record.availability_summary,
@@ -654,7 +655,9 @@ async function saveRecord(event) {
         full_name: [first, last, formValue("cg-second-last-name")].filter(Boolean).join(" "),
         birth_date: formValue("cg-birth-date") || null, phone: formValue("cg-phone") || null,
         email: formValue("cg-email") || null, nationality: formValue("cg-nationality") || null,
-        identity_document_type: $("#cg-doc-type").value, nie_expiry_date: formValue("cg-nie-expiry") || null,
+        identity_document_type: $("#cg-doc-type").value,
+        identity_document_number: formValue("cg-doc-number") || null,
+        nie_expiry_date: formValue("cg-nie-expiry") || null,
         home_address: formValue("cg-address") || null, city: formValue("cg-city") || null,
         province: formValue("cg-province") || null, postal_code: formValue("cg-postal") || null,
         work_area: formValue("cg-zone") || null, availability_summary: formValue("cg-availability") || null,
