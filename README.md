@@ -5,7 +5,7 @@ Portal privado para organizar cuidadoras, personas atendidas, turnos, citas y av
 ## Funciones
 
 - Acceso mediante Supabase Auth y verificación del perfil administrador.
-- Fichas de cuidadoras con estados de selección, disponibilidad, etiquetas y fechas de caducidad.
+- Fichas de cuidadoras con estados de selección, documentación (DNI/NIE), disponibilidad, etiquetas y fechas de caducidad.
 - Registro de personas atendidas y ubicación del servicio.
 - Planificación de turnos recurrentes y citas puntuales, con comprobaciones de solapamiento.
 - Panel con avisos de documentación y próximos servicios.
@@ -21,8 +21,9 @@ Las migraciones están en `supabase/migrations/` y deben ejecutarse únicamente 
 3. [Fichas y turnos](supabase/migrations/202610220003_care_profiles_and_shifts.sql)
 4. [Citas puntuales](supabase/migrations/202610220004_citas_puntuales.sql)
 5. [Google Calendar](supabase/migrations/202610220005_google_calendar.sql)
+6. [Documento de cuidadora](supabase/migrations/202610230006_caregiver_document_number.sql)
 
-Si ya están aplicadas las migraciones 001–003, ejecuta la 004 para habilitar las citas puntuales. Deja la 005 para cuando vayamos a activar Google Calendar. Ejecuta el SQL únicamente en el proyecto de CuidaGest.
+Si ya están aplicadas las migraciones 001–003, ejecuta la 004 para habilitar las citas puntuales. Deja la 005 para cuando vayamos a activar Google Calendar. La 006 añade el número de DNI/NIE a las cuidadoras y no borra ni modifica los datos existentes.
 
 ## Google Calendar
 
@@ -32,4 +33,4 @@ Las credenciales OAuth, los tokens y la clave de cifrado deben permanecer en los
 
 ## Protección de datos
 
-No guardes contraseñas, tokens, claves privadas ni números completos de documentos de identidad en GitHub. Antes de incorporar información real, revisa los permisos de acceso, la política de privacidad, las copias de seguridad y la restauración de datos.
+No guardes contraseñas, tokens ni claves privadas en GitHub. Los números de DNI/NIE se almacenan únicamente en la base de datos privada de CuidaGest y no se incluyen en el código del repositorio.
